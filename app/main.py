@@ -324,26 +324,25 @@ async def get_stats(user: str = Depends(get_current_user)):
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
     # Check External API Status
+    # Check External API Status
     api_up = False
     
-    # 1. Try Public Root URL Check (preferred as it tests external reachability)
+    # 1. Try Public Root URL (simplest external check)
     try:
-        r = requests.get("https://api.sec.lemue.org/", timeout=2, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
-        if r.status_code == 200:
-            api_up = True
-    except Exception:
-        pass # Fail silently to fallback
+        requests.get("https://api.sec.lemue.org/", timeout=5, verify=False, allow_redirects=True)
+        # If no exception, we reached the server (even if 4xx/5xx, it's 'up')
+        api_up = True
+    except Exception as e:
+        logger.warning(f"Public API Check failed: {e}")
         
-    # 2. Fallback to Localhost Loopback (127.0.0.1)
-    # If external fails (NAT, Firewall), check if service is running locally.
+    # 2. Fallback to Localhost Health Check
     if not api_up:
         try:
-             # Check root endpoint locally
-             r = requests.get("http://127.0.0.1:8080/", timeout=2)
+             r = requests.get("http://127.0.0.1:8080/health", timeout=2)
              if r.status_code == 200:
                  api_up = True
         except Exception as e:
-             logger.error(f"Health Check failed (Public & Local): {e}")
+             logger.error(f"Local Health Check failed: {e}")
              api_up = False
         
     last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
