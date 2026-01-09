@@ -1,0 +1,174 @@
+import os
+import uuid
+import json
+import logging
+import asyncio
+import threading
+from datetime import datetime, timedelta
+from typing import Optional, List
+
+import requests
+import redis
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, BackgroundTasks
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+
+# --- Configuration ---
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_CLIENT = redis.from_url(REDIS_URL, decode_responses=True)
+
+app = FastAPI(title="Threat Intelligence Bridge")
+templates = Jinja2Templates(directory="app/templates")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# --- Models ---
+class HFishWebhook(BaseModel):
+    attack_ip: str
+
+# --- Database Keys ---
+KEY_WHITELIST = "ti:whitelist"
+KEY_BLACKLIST = "ti:blacklist"
+KEY_LOCAL = "ti:local:"  # ti:local:{ip} -> date
+KEY_OSINT = "ti:osint:"   # ti:osint:{ip} -> date
+KEY_API_KEYS = "ti:api_keys"
+
+# --- Logic ---
+
+def get_ip_reputation(ip: str):
+    # 1. Whitelist
+    if REDIS_CLIENT.sismember(KEY_WHITELIST, ip):
+        return "clean", ["whitelist"]
+    
+    # 2. Blacklist
+    if REDIS_CLIENT.sismember(KEY_BLACKLIST, ip):
+        return "high", ["permanent blacklist"]
+    
+    # 3. Local Data
+    if REDIS_CLIENT.exists(f"{KEY_LOCAL}{ip}"):
+        return "high", ["hfish honeypot"]
+    
+    # 4. OSINT
+    if REDIS_CLIENT.exists(f"{KEY_OSINT}{ip}"):
+        return "medium", ["osint feed"]
+    
+    return "clean", []
+
+def format_threatbook_v3(ip: str, severity: str, judgments: List[str]):
+    return {
+        "code": 0,
+        "data": {
+            ip: {
+                "severity": severity,
+                "judgments": judgments,
+                "update_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            }
+        },
+        "message": "success"
+    }
+
+# --- Background Task: OSINT Feeds ---
+
+async def fetch_osint_feeds():
+    while True:
+        try:
+            logger.info("Fetching OSINT feeds...")
+            # Feodo Tracker
+            feodo_url = "https://feodotracker.abuse.ch/downloads/ipblocklist.txt"
+            r = requests.get(feodo_url, timeout=10)
+            if r.status_code == 200:
+                for line in r.text.splitlines():
+                    if line and not line.startswith("#"):
+                        # Store for 90 days
+                        REDIS_CLIENT.setex(f"{KEY_OSINT}{line.strip()}", timedelta(days=90), datetime.now().isoformat())
+            
+            # IPSum (Simplified, just TOP level)
+            ipsum_url = "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt"
+            r = requests.get(ipsum_url, timeout=10)
+            if r.status_code == 200:
+                for line in r.text.splitlines():
+                    if line and not line.startswith("#"):
+                        parts = line.split()
+                        if len(parts) > 1 and int(parts[1]) > 3: # Only high-confidence IPs
+                             REDIS_CLIENT.setex(f"{KEY_OSINT}{parts[0]}", timedelta(days=90), datetime.now().isoformat())
+            
+            logger.info("OSINT feeds updated.")
+        except Exception as e:
+            logger.error(f"Error fetching OSINT: {e}")
+        
+        await asyncio.sleep(24 * 3600) # Every 24 hours
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(fetch_osint_feeds())
+
+# --- API Routes ---
+
+@app.get("/v3/ip/reputation")
+async def ip_reputation(resource: str, apikey: str):
+    if not REDIS_CLIENT.sismember(KEY_API_KEYS, apikey):
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    
+    severity, judgments = get_ip_reputation(resource)
+    return format_threatbook_v3(resource, severity, judgments)
+
+@app.post("/webhook")
+async def hfish_webhook(data: HFishWebhook):
+    # Store local data for 365 days
+    REDIS_CLIENT.setex(f"{KEY_LOCAL}{data.attack_ip}", timedelta(days=365), datetime.now().isoformat())
+    return {"status": "ok"}
+
+# --- Dashboard Routes ---
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    # Stats
+    local_ips = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
+    osint_ips = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
+    blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
+    whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
+    
+    api_keys = list(REDIS_CLIENT.smembers(KEY_API_KEYS))
+    blacklist = list(REDIS_CLIENT.smembers(KEY_BLACKLIST))
+    whitelist = list(REDIS_CLIENT.smembers(KEY_WHITELIST))
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "stats": {
+            "local": local_ips,
+            "osint": osint_ips,
+            "blacklist": blacklist_count,
+            "whitelist": whitelist_count
+        },
+        "api_keys": api_keys,
+        "blacklist": blacklist,
+        "whitelist": whitelist
+    })
+
+@app.post("/api-key/generate")
+async def generate_key():
+    new_key = str(uuid.uuid4())
+    REDIS_CLIENT.sadd(KEY_API_KEYS, new_key)
+    return RedirectResponse(url="/", status_code=303)
+
+@app.post("/api-key/delete")
+async def delete_key(key: str = Form(...)):
+    REDIS_CLIENT.srem(KEY_API_KEYS, key)
+    return RedirectResponse(url="/", status_code=303)
+
+@app.post("/list/add")
+async def add_to_list(ip: str = Form(...), list_type: str = Form(...)):
+    if list_type == "blacklist":
+        REDIS_CLIENT.sadd(KEY_BLACKLIST, ip)
+    elif list_type == "whitelist":
+        REDIS_CLIENT.sadd(KEY_WHITELIST, ip)
+    return RedirectResponse(url="/", status_code=303)
+
+@app.post("/list/remove")
+async def remove_from_list(ip: str = Form(...), list_type: str = Form(...)):
+    if list_type == "blacklist":
+        REDIS_CLIENT.srem(KEY_BLACKLIST, ip)
+    elif list_type == "whitelist":
+        REDIS_CLIENT.srem(KEY_WHITELIST, ip)
+    return RedirectResponse(url="/", status_code=303)
