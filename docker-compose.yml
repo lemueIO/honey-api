@@ -3,6 +3,9 @@ services:
     build: .
     ports:
       - "8080:8080"
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     environment:
       - REDIS_URL=redis://redis:6379/0
     depends_on:
