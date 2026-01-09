@@ -128,6 +128,7 @@ async def fetch_osint_feeds():
     while True:
         try:
             logger.info("Fetching OSINT feeds...")
+            count = 0 
             # Feodo Tracker
             feodo_url = "https://feodotracker.abuse.ch/downloads/ipblocklist.txt"
             r = requests.get(feodo_url, timeout=10)
@@ -136,6 +137,7 @@ async def fetch_osint_feeds():
                     if line and not line.startswith("#"):
                         # Store for 90 days
                         REDIS_CLIENT.setex(f"{KEY_OSINT}{line.strip()}", timedelta(days=90), datetime.now().isoformat())
+                        count += 1
             
             # IPSum (Simplified, just TOP level)
             ipsum_url = "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt"
@@ -146,8 +148,11 @@ async def fetch_osint_feeds():
                         parts = line.split()
                         if len(parts) > 1 and int(parts[1]) > 3: # Only high-confidence IPs
                              REDIS_CLIENT.setex(f"{KEY_OSINT}{parts[0]}", timedelta(days=90), datetime.now().isoformat())
+                             count += 1
             
-            logger.info("OSINT feeds updated.")
+            # Store last update stats
+            REDIS_CLIENT.set("stats:last_osint_count", count)
+            logger.info(f"OSINT feeds updated. Added/Refreshed {count} IPs.")
         except Exception as e:
             logger.error(f"Error fetching OSINT: {e}")
         
@@ -247,11 +252,25 @@ async def get_stats(user: str = Depends(get_current_user)):
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
+    # Check External API Status
+    api_up = False
+    try:
+        # Just check connectivity (simple GET), usually returns 404 or something but connection works
+        requests.get("https://api.sec.lemue.org", timeout=2)
+        api_up = True
+    except:
+        api_up = False
+        
+    last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
+    if last_osint_count is None: last_osint_count = 0
+
     return {
         "local": local_ips,
         "osint": osint_ips,
         "blacklist": blacklist_count,
-        "whitelist": whitelist_count
+        "whitelist": whitelist_count,
+        "api_up": api_up,
+        "last_import_count": int(last_osint_count)
     }
 
 @app.post("/api-key/generate")
