@@ -3,4 +3,8 @@
 - You are allowed to autonomously start, stop, and restart Docker containers using `docker-compose`.
 - Use `docker-compose up -d --build` to apply changes and restart the environment.
 - When making backend changes that affect the Docker environment, always ensure the containers are restarted to reflect the changes.
+- **Workflow for Remote Deployment**: When you push changes to the git repository, you must also:
+    1. SSH into `lemue-io`.
+    2. Pull the latest changes in the corresponding directory.
+    3. Run `docker-compose up -d --build` (or the equivalent deployment command) to update the live environment.
 - You can run these commands directly in the terminal.
