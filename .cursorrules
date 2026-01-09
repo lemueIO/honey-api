@@ -9,4 +9,4 @@
     3. **Pull** the latest changes (`git pull`).
     4. **Rebuild & Restart** Docker containers (`docker compose up -d --build`).
 - You can run these commands directly in the terminal (e.g. `ssh lemue-io "cd honey-api && git pull && docker compose up -d --build"`).
-- **Documentation Maintenance**: Always maintain `README_DE.md` (German) and `README_DE2.md` (Simple German) in sync with changes made to `README.md`.
+- **Documentation Maintenance**: Always maintain `README_DE.md` (German), `README_DE2.md` (Simple German), and `README_UA.md` (Ukrainian) in sync with changes made to `README.md`.

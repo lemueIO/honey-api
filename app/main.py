@@ -329,7 +329,7 @@ async def get_stats(user: str = Depends(get_current_user)):
         logger.warning(f"HTTPS API Check failed: {e}")
         # Fallback to HTTP
         try:
-             requests.get("http://api.sec.lemue.org/v3/scene/ip_reputation?apikey=test&resource=1.1.1.1", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"})
+             requests.get("http://localhost:8080/v3/scene/ip_reputation?apikey=test&resource=1.1.1.1", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"})
              api_up = True
         except Exception as e2:
              logger.error(f"API Check failed (HTTPS & HTTP): {e} | {e2}")
