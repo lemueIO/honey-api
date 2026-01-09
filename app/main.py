@@ -309,6 +309,10 @@ async def dashboard(request: Request, user: str = Depends(get_current_user)):
         "whitelist": whitelist
     })
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 @app.get("/api/stats")
 async def get_stats(user: str = Depends(get_current_user)):
     if not user:
@@ -321,18 +325,24 @@ async def get_stats(user: str = Depends(get_current_user)):
     
     # Check External API Status
     api_up = False
+    
+    # 1. Try Public Health Check (preferred as it tests external reachability)
     try:
-        # 1. Try Public Root URL (as requested by user)
-        requests.get("https://api.sec.lemue.org/", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
-        api_up = True
-    except Exception as e:
-        logger.warning(f"Public API Check failed (likely NAT/Firewall): {e}")
-        # 2. Fallback to Localhost (to ensure dashboard shows Green if service is actually running)
+        r = requests.get("https://api.sec.lemue.org/health", timeout=2, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
+        if r.status_code == 200:
+            api_up = True
+    except Exception:
+        pass # Fail silently to fallback
+        
+    # 2. Fallback to Localhost Loopback (127.0.0.1)
+    # If external fails (NAT, Firewall), check if service is running locally.
+    if not api_up:
         try:
-             requests.get("http://localhost:8080/", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"})
-             api_up = True
-        except Exception as e2:
-             logger.error(f"Local API Check failed: {e2}")
+             r = requests.get("http://127.0.0.1:8080/health", timeout=2)
+             if r.status_code == 200:
+                 api_up = True
+        except Exception as e:
+             logger.error(f"Health Check failed (Public & Local): {e}")
              api_up = False
         
     last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
