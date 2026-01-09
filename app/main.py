@@ -317,9 +317,11 @@ async def get_stats(user: str = Depends(get_current_user)):
         # Just check connectivity (simple GET)
         # We consider it "UP" if we get ANY valid HTTP response (even 404/405/403), 
         # as long as the server is reachable.
-        resp = requests.get("https://api.sec.lemue.org", timeout=2, headers={"User-Agent": "Honey-API-Bridge/1.0"})
+        # verify=False to avoid container SSL root cert issues
+        resp = requests.get("https://api.sec.lemue.org", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
         api_up = True
-    except:
+    except Exception as e:
+        logger.error(f"API Check failed: {e}")
         api_up = False
         
     last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
