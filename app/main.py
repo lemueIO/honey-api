@@ -176,9 +176,9 @@ async def hfish_webhook(data: HFishWebhook):
     REDIS_CLIENT.setex(ip_key, timedelta(days=365), datetime.now().isoformat())
     
     if is_new:
-        logger.info(f"New IP added: {data.attack_ip}")
+        logger.info(f"🆕 New IP added: {data.attack_ip}")
     else:
-        logger.debug(f"Updated existing IP: {data.attack_ip}")
+        logger.info(f"🔄 Updated existing IP: {data.attack_ip}")
     
     return {"status": "ok"}
 
