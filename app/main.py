@@ -7,6 +7,7 @@ import threading
 from datetime import datetime, timedelta
 from typing import Optional, List
 
+import ipaddress
 import requests
 import redis
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, BackgroundTasks
@@ -55,13 +56,40 @@ def get_current_user(request: Request):
 
 # --- Logic ---
 
+def is_ip_in_cidr_list(ip: str, redis_key: str) -> bool:
+    """
+    Check if an IP is in a Redis set, handling both exact matches and CIDR ranges.
+    """
+    # 1. Try exact match first (O(1) in Redis)
+    if REDIS_CLIENT.sismember(redis_key, ip):
+        return True
+    
+    # 2. If not found, iterate through all members to check for CIDR ranges
+    members = REDIS_CLIENT.smembers(redis_key)
+    try:
+        target_ip = ipaddress.ip_address(ip)
+    except ValueError:
+        return False # Invalid IP input
+
+    for member in members:
+        try:
+            # Check if member is a CIDR range (e.g., "10.0.0.0/24")
+            if "/" in member:
+                network = ipaddress.ip_network(member, strict=False)
+                if target_ip in network:
+                    return True
+        except ValueError:
+            continue # Ignore invalid entries
+            
+    return False
+
 def get_ip_reputation(ip: str):
     # 1. Whitelist
-    if REDIS_CLIENT.sismember(KEY_WHITELIST, ip):
+    if is_ip_in_cidr_list(ip, KEY_WHITELIST):
         return "clean", ["whitelist"]
     
     # 2. Blacklist
-    if REDIS_CLIENT.sismember(KEY_BLACKLIST, ip):
+    if is_ip_in_cidr_list(ip, KEY_BLACKLIST):
         return "high", ["permanent blacklist"]
     
     # 3. Local Data
