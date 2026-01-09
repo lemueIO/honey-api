@@ -1,71 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Honey Cloud Intelligence</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', path='apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', path='favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', path='favicon-16x16.png') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', path='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', path='apple-touch-icon.png') }}?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', path='favicon-32x32.png') }}?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', path='favicon-16x16.png') }}?v=2">
+    <link rel="shortcut icon" href="{{ url_for('static', path='favicon.ico') }}?v=2">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #0d1117;
+            color: #c9d1d9;
         }
 
         .card {
-            border-radius: 10px;
-            border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            transition: transform 0.2s;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            box-shadow: none;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
+            border-color: #8b949e;
+        }
+
+        .card-header {
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
         }
 
         .stat-card {
             color: #fff;
         }
 
+        /* Keep gradients but adjust opacity or overlay if needed, 
+           or leave as is for contrast. */
         .bg-local {
-            background: linear-gradient(45deg, #4e73df, #224abe);
+            background: linear-gradient(135deg, #1f6feb, #238636);
         }
 
         .bg-osint {
-            background: linear-gradient(45deg, #1cc88a, #13855c);
+            background: linear-gradient(135deg, #238636, #2ea043);
         }
 
         .bg-blacklist {
-            background: linear-gradient(45deg, #e74a3b, #be2617);
+            background: linear-gradient(135deg, #da3633, #b62324);
         }
 
         .bg-whitelist {
-            background: linear-gradient(45deg, #f6c23e, #dda20a);
+            background: linear-gradient(135deg, #d29922, #9e6a03);
         }
 
         .btn-primary {
-            background-color: #4e73df;
-            border-color: #4e73df;
+            background-color: #238636;
+            border-color: #238636;
+            color: #ffffff;
         }
 
         .btn-primary:hover {
-            background-color: #2e59d9;
-            border-color: #2653d4;
+            background-color: #2ea043;
+            border-color: #2ea043;
         }
 
-        .table-responsive {
-            max-height: 400px;
-            overflow-y: auto;
+        .form-control,
+        .form-select {
+            background-color: #0d1117;
+            border-color: #30363d;
+            color: #c9d1d9;
         }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #0d1117;
+            border-color: #58a6ff;
+            color: #c9d1d9;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+        }
+
+        .table {
+            color: #c9d1d9;
+            border-color: #30363d;
+        }
+
+        .table-light {
+            background-color: #161b22;
+            color: #c9d1d9;
+            border-bottom: 2px solid #30363d;
+        }
+
+        /* Fix for table header cells trying to be light */
+        .table thead th {
+            background-color: #161b22;
+            color: #8b949e;
+            border-color: #30363d;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #21262d;
+            color: #c9d1d9;
+        }
+
+        /* Stats card text need to be readable on gradients - default is white which is fine */
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4"
+        style="background-color: #161b22 !important; border-bottom: 1px solid #30363d;">
         <div class="container">
             <a class="navbar-brand" href="#"><i class="bi bi-shield-check"></i> Honey Cloud Intelligence</a>
             <div class="ms-auto">
@@ -119,7 +165,7 @@
             <!-- API Key Management -->
             <div class="col-12">
                 <div class="card mb-4">
-                    <div class="card-header bg-white py-3 border-0">
+                    <div class="card-header py-3 border-0">
                         <h5 class="mb-0"><i class="bi bi-key-fill text-primary"></i> API Key Management</h5>
                     </div>
                     <div class="card-body">
@@ -148,9 +194,11 @@
                                         <td class="fw-bold">{{ name }}</td>
                                         <td>
                                             <div class="input-group">
-                                                <code class="form-control bg-light border-0 py-2">{{ key }}</code>
-                                                <button class="btn btn-outline-secondary btn-sm border-0 bg-light"
-                                                    type="button" onclick="copyToClipboard('{{ key }}', this)">
+                                                <code class="form-control border-0 py-2"
+                                                    style="background-color: #21262d; color: #e1e4e8;">{{ key }}</code>
+                                                <button class="btn btn-outline-secondary btn-sm border-0"
+                                                    style="background-color: #21262d; color: #8b949e;" type="button"
+                                                    onclick="copyToClipboard('{{ key }}', this)">
                                                     <i class="bi bi-clipboard"></i>
                                                 </button>
                                             </div>
@@ -180,7 +228,7 @@
             <!-- List Management -->
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-white py-3 border-0">
+                    <div class="card-header py-3 border-0">
                         <h5 class="mb-0"><i class="bi bi-list-stars text-primary"></i> List Management</h5>
                     </div>
                     <div class="card-body">
@@ -204,13 +252,14 @@
                         <div class="row g-4">
                             <!-- Blacklist Display -->
                             <div class="col-md-6">
-                                <div class="p-3 border rounded bg-light bg-opacity-50">
+                                <div class="p-3 border rounded bg-opacity-10"
+                                    style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-shield-slash text-danger"></i> Permanent Blacklist</span>
                                         <span class="badge bg-danger rounded-pill">{{ stats.blacklist }}</span>
                                     </h6>
                                     <div class="table-responsive" style="max-height: 300px;">
-                                        <table class="table table-sm table-hover bg-white">
+                                        <table class="table table-sm table-hover">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>IP</th>
@@ -245,13 +294,14 @@
                             </div>
                             <!-- Whitelist Display -->
                             <div class="col-md-6">
-                                <div class="p-3 border rounded bg-light bg-opacity-50">
+                                <div class="p-3 border rounded bg-opacity-10"
+                                    style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-shield-check text-success"></i> Permanent Whitelist</span>
                                         <span class="badge bg-success rounded-pill">{{ stats.whitelist }}</span>
                                     </h6>
                                     <div class="table-responsive" style="max-height: 300px;">
-                                        <table class="table table-sm table-hover bg-white">
+                                        <table class="table table-sm table-hover">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>IP</th>
