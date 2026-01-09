@@ -7,7 +7,7 @@ import threading
 from datetime import datetime, timedelta
 from typing import Optional, List
 
-import ipaddress
+import socket
 import requests
 import redis
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, BackgroundTasks
@@ -28,6 +28,10 @@ SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", "change-me-at-all-costs")
 
 app = FastAPI(title="Threat Intelligence Bridge")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.middleware("http")
 async def fix_double_slashes(request: Request, call_next):
@@ -309,10 +313,6 @@ async def dashboard(request: Request, user: str = Depends(get_current_user)):
         "whitelist": whitelist
     })
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
 @app.get("/api/stats")
 async def get_stats(user: str = Depends(get_current_user)):
     if not user:
@@ -324,26 +324,33 @@ async def get_stats(user: str = Depends(get_current_user)):
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
     # Check External API Status
-    # Check External API Status
     api_up = False
     
-    # 1. Try Public Root URL (simplest external check)
+    # 1. Socket Check - Public (Port 443)
+    # This proves api.sec.lemue.org is reachable from 'external' perspective
     try:
-        requests.get("https://api.sec.lemue.org/", timeout=5, verify=False, allow_redirects=True)
-        # If no exception, we reached the server (even if 4xx/5xx, it's 'up')
-        api_up = True
-    except Exception as e:
-        logger.warning(f"Public API Check failed: {e}")
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2)
+        # Using the resolved IP if possible, or domain
+        result = s.connect_ex(("api.sec.lemue.org", 443))
+        if result == 0:
+            api_up = True
+        s.close()
+    except Exception:
+        pass
         
-    # 2. Fallback to Localhost Health Check
+    # 2. Socket Check - Localhost (Port 8080) 
+    # Fallback to confirm the app process is listening locally
     if not api_up:
         try:
-             r = requests.get("http://127.0.0.1:8080/health", timeout=2)
-             if r.status_code == 200:
-                 api_up = True
-        except Exception as e:
-             logger.error(f"Local Health Check failed: {e}")
-             api_up = False
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1)
+            result = s.connect_ex(("127.0.0.1", 8080))
+            if result == 0:
+                api_up = True
+            s.close()
+        except Exception:
+            pass
         
     last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
     if last_osint_count is None: last_osint_count = 0
