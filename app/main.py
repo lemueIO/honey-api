@@ -171,7 +171,15 @@ async def ip_reputation(resource: str, apikey: str):
 @app.post("/webhook")
 async def hfish_webhook(data: HFishWebhook):
     # Store local data for 365 days
-    REDIS_CLIENT.setex(f"{KEY_LOCAL}{data.attack_ip}", timedelta(days=365), datetime.now().isoformat())
+    ip_key = f"{KEY_LOCAL}{data.attack_ip}"
+    is_new = not REDIS_CLIENT.exists(ip_key)
+    REDIS_CLIENT.setex(ip_key, timedelta(days=365), datetime.now().isoformat())
+    
+    if is_new:
+        logger.info(f"New IP added: {data.attack_ip}")
+    else:
+        logger.debug(f"Updated existing IP: {data.attack_ip}")
+    
     return {"status": "ok"}
 
 # --- Auth Routes ---
