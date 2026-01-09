@@ -27,7 +27,7 @@
         }
 
         .card:hover {
-            transform: translateY(-2px);
+            /* transform: translateY(-2px); Removed to avoid confusion with pulse animation */
             border-color: #8b949e;
         }
 
@@ -470,11 +470,24 @@
                 .catch(error => console.error('Error fetching stats:', error));
         }
 
+        // Initialize previousStats from DOM to ensure first real update triggers animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const initVal = (id, key) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    // remove commas if present and parse
+                    const val = parseInt(el.innerText.replace(/,/g, ''));
+                    previousStats[key] = isNaN(val) ? 0 : val;
+                }
+            };
+            initVal('stats-local', 'local');
+            initVal('stats-osint', 'osint');
+            initVal('stats-blacklist', 'blacklist');
+            initVal('stats-whitelist', 'whitelist');
+        });
+
         // Poll every 30 seconds
         setInterval(updateStats, 30000);
-
-        // Initial fetch to ensure freshness (optional, but good practice)
-        // setTimeout(updateStats, 1000); 
     </script>
 </body>
 
