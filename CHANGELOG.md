@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-09
+
+### Added
+- **Localization**: Added full Ukrainian translation (`README_UA.md`).
+- **Monitoring**: 
+    - Added "Check External" reachability link in Dashboard (Check-Host.net).
+    - Added standalone `tools/check_external_access.py` script for external verification.
+    - Added dedicated `/health` endpoint.
+- **OSINT**: Expanded OSINT feed sources to 10.
+
+### Fixed
+- **Dashboard**: Fixed "API Status" indicator using resilient socket-based checks to prevent HTTP deadlocks.
+- **UI**: Increased dashboard auto-refresh rate to 10 seconds.
+
+### Changed
+- **Versioning**: Officially bumped version to v1.2.0.
+- **Operations**: Added explicit DNS settings (`1.1.1.1`, `1.0.0.1`) to `docker-compose.yml` for improved container resolution.
+
 ## [1.0.2] - 2026-01-09
 
 ### Fixed
