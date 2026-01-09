@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="15">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta http-equiv="refresh" content="15"> Removed in favor of AJAX updates -->
     <title>Honey Cloud Intelligence</title>
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png?v=2">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png?v=2">
@@ -132,7 +133,7 @@
                 <div class="card stat-card bg-local h-100">
                     <div class="card-body">
                         <h5 class="card-title">Honey Cloud Intelligence IPs</h5>
-                        <p class="display-6 fw-bold mb-0">{{ stats.local }}</p>
+                        <p class="display-6 fw-bold mb-0" id="stats-local">{{ stats.local }}</p>
                         <small>Last 365 Days</small>
                     </div>
                 </div>
@@ -141,7 +142,7 @@
                 <div class="card stat-card bg-osint h-100">
                     <div class="card-body">
                         <h5 class="card-title">OSINT IPs</h5>
-                        <p class="display-6 fw-bold mb-0">{{ stats.osint }}</p>
+                        <p class="display-6 fw-bold mb-0" id="stats-osint">{{ stats.osint }}</p>
                         <small>Last 90 Days</small>
                     </div>
                 </div>
@@ -150,7 +151,7 @@
                 <div class="card stat-card bg-blacklist h-100">
                     <div class="card-body">
                         <h5 class="card-title">Blacklist</h5>
-                        <p class="display-6 fw-bold mb-0">{{ stats.blacklist }}</p>
+                        <p class="display-6 fw-bold mb-0" id="stats-blacklist">{{ stats.blacklist }}</p>
                         <small>Permanent</small>
                     </div>
                 </div>
@@ -159,7 +160,7 @@
                 <div class="card stat-card bg-whitelist h-100">
                     <div class="card-body">
                         <h5 class="card-title">Whitelist</h5>
-                        <p class="display-6 fw-bold mb-0">{{ stats.whitelist }}</p>
+                        <p class="display-6 fw-bold mb-0" id="stats-whitelist">{{ stats.whitelist }}</p>
                         <small>Permanent</small>
                     </div>
                 </div>
@@ -261,7 +262,7 @@
                                     style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-shield-slash text-danger"></i> Permanent Blacklist</span>
-                                        <span class="badge bg-danger rounded-pill">{{ stats.blacklist }}</span>
+                                        <span class="badge bg-danger rounded-pill" id="badge-blacklist">{{ stats.blacklist }}</span>
                                     </h6>
                                     <div class="table-responsive" style="max-height: 300px;">
                                         <table class="table table-sm table-hover">
@@ -303,7 +304,7 @@
                                     style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-shield-check text-success"></i> Permanent Whitelist</span>
-                                        <span class="badge bg-success rounded-pill">{{ stats.whitelist }}</span>
+                                        <span class="badge bg-success rounded-pill" id="badge-whitelist">{{ stats.whitelist }}</span>
                                     </h6>
                                     <div class="table-responsive" style="max-height: 300px;">
                                         <table class="table table-sm table-hover">
@@ -385,6 +386,46 @@
             }
             document.body.removeChild(textArea);
         }
+
+        // Stats Refresh Logic
+        function updateStats() {
+            fetch('/api/stats')
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.reload(); // Reload if session expired
+                        }
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update Main Stats Cards
+                    const local = document.getElementById('stats-local');
+                    const osint = document.getElementById('stats-osint');
+                    const blacklist = document.getElementById('stats-blacklist');
+                    const whitelist = document.getElementById('stats-whitelist');
+                    
+                    if(local) local.innerText = data.local;
+                    if(osint) osint.innerText = data.osint;
+                    if(blacklist) blacklist.innerText = data.blacklist;
+                    if(whitelist) whitelist.innerText = data.whitelist;
+
+                    // Update List Badges
+                    const badgeBlacklist = document.getElementById('badge-blacklist');
+                    const badgeWhitelist = document.getElementById('badge-whitelist');
+
+                    if(badgeBlacklist) badgeBlacklist.innerText = data.blacklist;
+                    if(badgeWhitelist) badgeWhitelist.innerText = data.whitelist;
+                })
+                .catch(error => console.error('Error fetching stats:', error));
+        }
+
+        // Poll every 30 seconds
+        setInterval(updateStats, 30000);
+        
+        // Initial fetch to ensure freshness (optional, but good practice)
+        // setTimeout(updateStats, 1000); 
     </script>
 </body>
 

@@ -237,6 +237,23 @@ async def dashboard(request: Request, user: str = Depends(get_current_user)):
         "whitelist": whitelist
     })
 
+@app.get("/api/stats")
+async def get_stats(user: str = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+        
+    local_ips = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
+    osint_ips = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
+    blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
+    whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
+    
+    return {
+        "local": local_ips,
+        "osint": osint_ips,
+        "blacklist": blacklist_count,
+        "whitelist": whitelist_count
+    }
+
 @app.post("/api-key/generate")
 async def generate_key(name: str = Form(...), user: str = Depends(get_current_user)):
     if not user: return RedirectResponse(url="/login")
