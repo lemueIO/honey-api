@@ -326,9 +326,9 @@ async def get_stats(user: str = Depends(get_current_user)):
     # Check External API Status
     api_up = False
     
-    # 1. Try Public Health Check (preferred as it tests external reachability)
+    # 1. Try Public Root URL Check (preferred as it tests external reachability)
     try:
-        r = requests.get("https://api.sec.lemue.org/health", timeout=2, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
+        r = requests.get("https://api.sec.lemue.org/", timeout=2, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
         if r.status_code == 200:
             api_up = True
     except Exception:
@@ -338,7 +338,8 @@ async def get_stats(user: str = Depends(get_current_user)):
     # If external fails (NAT, Firewall), check if service is running locally.
     if not api_up:
         try:
-             r = requests.get("http://127.0.0.1:8080/health", timeout=2)
+             # Check root endpoint locally
+             r = requests.get("http://127.0.0.1:8080/", timeout=2)
              if r.status_code == 200:
                  api_up = True
         except Exception as e:
