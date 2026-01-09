@@ -72,3 +72,7 @@ curl "http://localhost:8080/v3/scene/ip_reputation?apikey=YOUR_API_KEY&resource=
 -   **Database**: Redis
 -   **Frontend**: Jinja2 Templates, Bootstrap 5 (Dark Mode)
 -   **Deployment**: Docker
+
+---
+
+Maintained by the Honey-Scan Community and [lemueIO](https://github.com/lemueIO) ❤️
