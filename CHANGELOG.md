@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-01-09
+
+### Fixed
+-   **API Endpoint**: Fixed double slash issue in API requests by correcting HFish database configuration (removed trailing slash from `https://api.sec.lemue.org/`).
+-   **API Route**: Updated API endpoint from `/v3/ip/reputation` to `/v3/scene/ip_reputation` to match ThreatBook v3 standard and HFish expectations.
+-   **Middleware**: Added double slash middleware as a safety mechanism to handle malformed URLs.
+
+### Added
+-   **Enhanced Logging**: Added detailed webhook logging to differentiate between new IPs (🆕) and updates to existing IPs (🔄).
+-   **Monitoring**: Improved visibility into IP collection patterns and duplicate detection.
+
+### Changed
+-   **Deployment**: Rebuilt and redeployed production container with all fixes.
+
 ## [1.0.1] - 2026-01-09
 
 ### Added
