@@ -12,6 +12,14 @@
   [![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge&logo=activity&logoColor=white)](https://github.com/lemueIO/honey-api)
 </div>
 
+<div align="center">
+  <h4>
+    <a href="README.md">🇬🇧 English</a> | 
+    <a href="README_DE.md">🇩🇪 Deutsch</a> | 
+    <a href="README_DE2.md">🇩🇪 Einfache Sprache</a>
+  </h4>
+</div>
+
 Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge designed to aggregate, manage, and serve threat data from local HFish honeypots and global OSINT sources. It emulates the **ThreatBook v3 API**, allowing seamless integration with existing security tools without hitting external rate limits.
 
 <div align="center">

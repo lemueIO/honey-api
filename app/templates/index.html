@@ -112,19 +112,25 @@
         @keyframes pulse-animation {
             0% {
                 transform: scale(1);
+                border-color: #30363d;
             }
 
             50% {
-                transform: scale(1.05);
+                transform: scale(1.02);
+                border-color: #ff4444;
+                box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
             }
 
             100% {
                 transform: scale(1);
+                border-color: #30363d;
             }
         }
 
         .pulse {
-            animation: pulse-animation 0.3s ease-in-out;
+            animation: pulse-animation 0.5s ease-in-out;
+            position: relative;
+            z-index: 10;
         }
     </style>
 </head>

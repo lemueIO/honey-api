@@ -8,3 +8,4 @@
     2. Pull the latest changes in the corresponding directory.
     3. Run `docker-compose up -d --build` (or the equivalent deployment command) to update the live environment.
 - You can run these commands directly in the terminal.
+- **Documentation Maintenance**: Always maintain `README_DE.md` (German) and `README_DE2.md` (Simple German) in sync with changes made to `README.md`.
