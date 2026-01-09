@@ -29,6 +29,8 @@ app = FastAPI(title="Threat Intelligence Bridge")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 
 templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
