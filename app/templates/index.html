@@ -203,7 +203,10 @@
                             <span id="api-status-text">Checking...</span>
                         </div>
                         <div>
-                            Last OSINT Batch: <span id="stats-last-import" class="fw-bold text-light">-</span> IPs
+                            Last Cloud (24h): <span id="stats-last-cloud" class="fw-bold text-light">-</span> IPs
+                        </div>
+                        <div>
+                            Last OSINT: <span id="stats-last-osint" class="fw-bold text-light">-</span> IPs
                         </div>
                     </div>
                 </div>
@@ -495,19 +498,31 @@
                     // Update System Status
                     const apiDot = document.getElementById('api-status-dot');
                     const apiText = document.getElementById('api-status-text');
-                    const lastImport = document.getElementById('stats-last-import');
+                    const lastCloud = document.getElementById('stats-last-cloud');
+                    const lastOsint = document.getElementById('stats-last-osint');
 
                     if (apiDot && apiText) {
                         if (data.api_up) {
                             apiDot.style.backgroundColor = '#238636'; // Green
                             apiText.innerText = 'Online';
+                            apiText.style.color = '#238636';
                         } else {
                             apiDot.style.backgroundColor = '#da3633'; // Red
                             apiText.innerText = 'Offline';
+                            apiText.style.color = '#da3633';
                         }
                     }
-                    if (lastImport) lastImport.innerText = '+' + data.last_import_count;
 
+                    if (lastCloud) {
+                        const val = data.last_cloud_count || 0;
+                        const sign = val >= 0 ? '+' : '';
+                        lastCloud.innerText = `${sign}${val}`;
+                    }
+                    if (lastOsint) {
+                        const val = data.last_osint_count || 0;
+                        const sign = val >= 0 ? '+' : '';
+                        lastOsint.innerText = `${sign}${val}`;
+                    }
                 })
                 .catch(error => console.error('Error fetching stats:', error));
         }

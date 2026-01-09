@@ -237,6 +237,14 @@ async def hfish_webhook(data: HFishWebhook):
     # Store local data for 365 days
     ip_key = f"{KEY_LOCAL}{data.attack_ip}"
     is_new = not REDIS_CLIENT.exists(ip_key)
+    
+    if is_new:
+         # Increment daily/session counter for "Last Cloud IPs"
+         REDIS_CLIENT.incr("stats:cloud_new_24h")
+         # Set expire only if key is new (e.g. 24h window roughly)
+         if REDIS_CLIENT.ttl("stats:cloud_new_24h") == -1:
+             REDIS_CLIENT.expire("stats:cloud_new_24h", 86400)
+    
     REDIS_CLIENT.setex(ip_key, timedelta(days=365), datetime.now().isoformat())
     
     if is_new:
@@ -314,18 +322,24 @@ async def get_stats(user: str = Depends(get_current_user)):
     # Check External API Status
     api_up = False
     try:
-        # Just check connectivity (simple GET)
-        # We consider it "UP" if we get ANY valid HTTP response (even 404/405/403), 
-        # as long as the server is reachable.
-        # verify=False to avoid container SSL root cert issues
-        resp = requests.get("https://api.sec.lemue.org", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
+        # Try HTTPS first with no verify to avoid cert issues in container
+        requests.get("https://api.sec.lemue.org/v3/scene/ip_reputation?apikey=test&resource=1.1.1.1", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
         api_up = True
     except Exception as e:
-        logger.error(f"API Check failed: {e}")
-        api_up = False
+        logger.warning(f"HTTPS API Check failed: {e}")
+        # Fallback to HTTP
+        try:
+             requests.get("http://api.sec.lemue.org/v3/scene/ip_reputation?apikey=test&resource=1.1.1.1", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"})
+             api_up = True
+        except Exception as e2:
+             logger.error(f"API Check failed (HTTPS & HTTP): {e} | {e2}")
+             api_up = False
         
     last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
     if last_osint_count is None: last_osint_count = 0
+    
+    cloud_new_24h = REDIS_CLIENT.get("stats:cloud_new_24h")
+    if cloud_new_24h is None: cloud_new_24h = 0
 
     return {
         "local": local_ips,
@@ -333,7 +347,8 @@ async def get_stats(user: str = Depends(get_current_user)):
         "blacklist": blacklist_count,
         "whitelist": whitelist_count,
         "api_up": api_up,
-        "last_import_count": int(last_osint_count)
+        "last_osint_count": int(last_osint_count),
+        "last_cloud_count": int(cloud_new_24h)
     }
 
 @app.post("/api-key/generate")
