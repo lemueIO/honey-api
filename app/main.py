@@ -29,6 +29,13 @@ SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", "change-me-at-all-costs")
 app = FastAPI(title="Threat Intelligence Bridge")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 
+@app.middleware("http")
+async def fix_double_slashes(request: Request, call_next):
+    if "//" in request.scope["path"]:
+        request.scope["path"] = request.scope["path"].replace("//", "/")
+    response = await call_next(request)
+    return response
+
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -152,7 +159,7 @@ async def startup_event():
 
 # --- API Routes ---
 
-@app.get("/v3/ip/reputation")
+@app.get("/v3/scene/ip_reputation")
 async def ip_reputation(resource: str, apikey: str):
     # Check both old and new keys for compatibility
     if not REDIS_CLIENT.sismember(KEY_API_KEYS, apikey) and not REDIS_CLIENT.hexists(KEY_API_KEYS_V2, apikey):
