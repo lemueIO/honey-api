@@ -58,6 +58,8 @@ KEY_LOCAL = "ti:local:"  # ti:local:{ip} -> date
 KEY_OSINT = "ti:osint:"   # ti:osint:{ip} -> date
 KEY_API_KEYS = "ti:api_keys"
 KEY_API_KEYS_V2 = "ti:api_keys_v2" # Hash: key -> name
+KEY_STATS_LOCAL = "stats:total_local"
+KEY_STATS_OSINT = "stats:total_osint"
 
 # --- Auth Dependency ---
 def get_current_user(request: Request):
@@ -152,13 +154,15 @@ async def fetch_osint_feeds():
                                         local_count += 1
                                     REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
                 except Exception as ex:
-                    logger.error(f"Error fetching {url}: {ex}")
+                    logger.error(f"❌ Error fetching {url}: {ex}")
                 return local_count
 
             # 1. Feodo Tracker
-            count += process_text_feed("https://feodotracker.abuse.ch/downloads/ipblocklist.txt")
+            new_feodo = process_text_feed("https://feodotracker.abuse.ch/downloads/ipblocklist.txt")
+            count += new_feodo
             
             # 2. IPSum (Top level)
+            new_ipsum = 0
             try:
                 r = requests.get("https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", timeout=10)
                 if r.status_code == 200:
@@ -169,10 +173,11 @@ async def fetch_osint_feeds():
                                  ip = parts[0]
                                  key = f"{KEY_OSINT}{ip}"
                                  if not REDIS_CLIENT.exists(key):
-                                     count += 1
+                                     new_ipsum += 1
                                  REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
             except Exception as e:
-                logger.error(f"Error fetching IPSum: {e}")
+                logger.error(f"❌ Error fetching IPSum: {e}")
+            count += new_ipsum
 
             # 3. CINS Army
             count += process_text_feed("http://cinsscore.com/list/ci-badguys.txt")
@@ -196,6 +201,7 @@ async def fetch_osint_feeds():
             count += process_text_feed("https://osint.digitalside.it/Threat-Intel/lists/latestips.txt")
 
             # 10. ThreatFox (CSV parsing)
+            new_threatfox = 0
             try:
                 r = requests.get("https://threatfox.abuse.ch/export/csv/ip-port/recent/", timeout=15)
                 if r.status_code == 200:
@@ -209,21 +215,34 @@ async def fetch_osint_feeds():
                                
                                key = f"{KEY_OSINT}{ioc_value}"
                                if not REDIS_CLIENT.exists(key):
-                                   count += 1
+                                   new_threatfox += 1
                                REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
             except Exception as e:
-                logger.error(f"Error fetching ThreatFox: {e}")
+                logger.error(f"❌ Error fetching ThreatFox: {e}")
+            count += new_threatfox
 
-            # Store last update stats
+            # Update stats
             REDIS_CLIENT.set("stats:last_osint_count", count)
-            logger.info(f"OSINT feeds updated. Added {count} new IPs.")
+            REDIS_CLIENT.incrby(KEY_STATS_OSINT, count)
+            logger.info(f"✅ OSINT feeds updated. Added {count} new IPs.")
         except Exception as e:
-            logger.error(f"Error fetching OSINT: {e}")
+            logger.error(f"❌ Error fetching OSINT: {e}")
         
         await asyncio.sleep(24 * 3600) # Every 24 hours
 
 @app.on_event("startup")
 async def startup_event():
+    # Initialize optimized counters if they don't exist
+    if not REDIS_CLIENT.exists(KEY_STATS_LOCAL):
+        logger.info("Initializing stats:total_local counter...")
+        local_count = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
+        REDIS_CLIENT.set(KEY_STATS_LOCAL, local_count)
+        
+    if not REDIS_CLIENT.exists(KEY_STATS_OSINT):
+        logger.info("Initializing stats:total_osint counter...")
+        osint_count = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
+        REDIS_CLIENT.set(KEY_STATS_OSINT, osint_count)
+    
     asyncio.create_task(fetch_osint_feeds())
 
 # --- API Routes ---
@@ -257,6 +276,8 @@ async def hfish_webhook(data: HFishWebhook):
     if is_new:
          # Increment daily/session counter for "Last Cloud IPs"
          REDIS_CLIENT.incr("stats:cloud_new_24h")
+         # Increement total local counter
+         REDIS_CLIENT.incr(KEY_STATS_LOCAL)
          # Set expire only if key is new (e.g. 24h window roughly)
          if REDIS_CLIENT.ttl("stats:cloud_new_24h") == -1:
              REDIS_CLIENT.expire("stats:cloud_new_24h", 86400)
@@ -264,7 +285,7 @@ async def hfish_webhook(data: HFishWebhook):
     REDIS_CLIENT.setex(ip_key, timedelta(days=365), datetime.now().isoformat())
     
     if is_new:
-        logger.info(f"🆕 New IP added: {data.attack_ip}")
+        logger.info(f"✅ New IP added: {data.attack_ip}")
     else:
         logger.info(f"🔄 Updated existing IP: {data.attack_ip}")
     
@@ -295,9 +316,9 @@ async def dashboard(request: Request, user: str = Depends(get_current_user)):
     if not user:
         return RedirectResponse(url="/login")
         
-    # Stats
-    local_ips = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
-    osint_ips = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
+    # Stats (Optimized)
+    local_ips = int(REDIS_CLIENT.get(KEY_STATS_LOCAL) or 0)
+    osint_ips = int(REDIS_CLIENT.get(KEY_STATS_OSINT) or 0)
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
@@ -330,8 +351,8 @@ async def get_stats(user: str = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
         
-    local_ips = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
-    osint_ips = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
+    local_ips = int(REDIS_CLIENT.get(KEY_STATS_LOCAL) or 0)
+    osint_ips = int(REDIS_CLIENT.get(KEY_STATS_OSINT) or 0)
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
