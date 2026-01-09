@@ -108,6 +108,24 @@
         }
 
         /* Stats card text need to be readable on gradients - default is white which is fine */
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .pulse {
+            animation: pulse-animation 0.3s ease-in-out;
+        }
     </style>
 </head>
 
@@ -262,7 +280,8 @@
                                     style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-shield-slash text-danger"></i> Permanent Blacklist</span>
-                                        <span class="badge bg-danger rounded-pill" id="badge-blacklist">{{ stats.blacklist }}</span>
+                                        <span class="badge bg-danger rounded-pill" id="badge-blacklist">{{
+                                            stats.blacklist }}</span>
                                     </h6>
                                     <div class="table-responsive" style="max-height: 300px;">
                                         <table class="table table-sm table-hover">
@@ -304,7 +323,8 @@
                                     style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-shield-check text-success"></i> Permanent Whitelist</span>
-                                        <span class="badge bg-success rounded-pill" id="badge-whitelist">{{ stats.whitelist }}</span>
+                                        <span class="badge bg-success rounded-pill" id="badge-whitelist">{{
+                                            stats.whitelist }}</span>
                                     </h6>
                                     <div class="table-responsive" style="max-height: 300px;">
                                         <table class="table table-sm table-hover">
@@ -387,7 +407,28 @@
             document.body.removeChild(textArea);
         }
 
-        // Stats Refresh Logic
+        // Stats Refresh Logic. Keep track of previous values to animate only on change.
+        const previousStats = {
+            local: null,
+            osint: null,
+            blacklist: null,
+            whitelist: null
+        };
+
+        function animateElement(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                // Find the closest card parent to animate the whole card, or just the number?
+                // User asked for "the box", so let's animate the card.
+                const card = element.closest('.card');
+                if (card) {
+                    card.classList.remove('pulse');
+                    void card.offsetWidth; // trigger reflow
+                    card.classList.add('pulse');
+                }
+            }
+        }
+
         function updateStats() {
             fetch('/api/stats')
                 .then(response => {
@@ -401,29 +442,37 @@
                 })
                 .then(data => {
                     // Update Main Stats Cards
-                    const local = document.getElementById('stats-local');
-                    const osint = document.getElementById('stats-osint');
-                    const blacklist = document.getElementById('stats-blacklist');
-                    const whitelist = document.getElementById('stats-whitelist');
-                    
-                    if(local) local.innerText = data.local;
-                    if(osint) osint.innerText = data.osint;
-                    if(blacklist) blacklist.innerText = data.blacklist;
-                    if(whitelist) whitelist.innerText = data.whitelist;
+                    const updateField = (id, key) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            const newValue = data[key];
+                            // Only animate if we have a previous value and it changed
+                            if (previousStats[key] !== null && previousStats[key] !== newValue) {
+                                animateElement(id);
+                            }
+                            el.innerText = newValue;
+                            previousStats[key] = newValue;
+                        }
+                    };
+
+                    updateField('stats-local', 'local');
+                    updateField('stats-osint', 'osint');
+                    updateField('stats-blacklist', 'blacklist');
+                    updateField('stats-whitelist', 'whitelist');
 
                     // Update List Badges
                     const badgeBlacklist = document.getElementById('badge-blacklist');
                     const badgeWhitelist = document.getElementById('badge-whitelist');
 
-                    if(badgeBlacklist) badgeBlacklist.innerText = data.blacklist;
-                    if(badgeWhitelist) badgeWhitelist.innerText = data.whitelist;
+                    if (badgeBlacklist) badgeBlacklist.innerText = data.blacklist;
+                    if (badgeWhitelist) badgeWhitelist.innerText = data.whitelist;
                 })
                 .catch(error => console.error('Error fetching stats:', error));
         }
 
         // Poll every 30 seconds
         setInterval(updateStats, 30000);
-        
+
         // Initial fetch to ensure freshness (optional, but good practice)
         // setTimeout(updateStats, 1000); 
     </script>
