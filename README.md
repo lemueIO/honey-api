@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>High-Performance Threat Intelligence Bridge & Aggregator</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v1.2.2-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v1.2.2)
+  [![Version](https://img.shields.io/badge/version-v2.0.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.0.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -79,6 +79,55 @@ Query the API emulating the ThreatBook format:
 ```bash
 curl "http://localhost:8080/v3/scene/ip_reputation?apikey=YOUR_API_KEY&resource=1.2.3.4"
 ```
+
+## API Documentation
+
+### 1. Reputation Check (ThreatBook v3 Compatible)
+Query IP reputation intelligence.
+
+- **Endpoint**: `/v3/scene/ip_reputation`
+- **Method**: `GET`
+- **Parameters**:
+  - `apikey`: Your personal API key.
+  - `resource`: The IP address to check.
+- **Example**:
+  ```bash
+  curl "http://<server-ip>:8080/v3/scene/ip_reputation?apikey=YOUR_KEY&resource=1.2.3.4"
+  ```
+- **Response**:
+  ```json
+  {
+      "code": 0,
+      "data": {
+          "1.2.3.4": {
+              "severity": "high",
+              "judgments": ["permanent blacklist"],
+              "update_time": "2024-01-01 12:00:00"
+          }
+      },
+      "message": "success"
+  }
+  ```
+
+### 2. Webhook (HFish Compatible)
+Receive attack logs from HFish nodes.
+
+- **Endpoint**: `/webhook`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+- **Body**:
+  ```json
+  {
+      "attack_ip": "1.2.3.4"
+  }
+  ```
+
+### 3. Health Check
+Monitor system status.
+
+- **Endpoint**: `/health`
+- **Method**: `GET`
+- **Response**: `{"status": "ok"}`
 
 ## Technology Stack
 

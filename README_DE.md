@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>Hochperformante Threat Intelligence Bridge & Aggregator</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v1.2.2-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v1.2.2)
+  [![Version](https://img.shields.io/badge/version-v2.0.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.0.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -78,6 +78,55 @@ Fragen Sie die API im ThreatBook-Format ab:
 ```bash
 curl "http://localhost:8080/v3/scene/ip_reputation?apikey=IHR_API_KEY&resource=1.2.3.4"
 ```
+
+## API Dokumentation
+
+### 1. Reputations-Check (ThreatBook v3 Kompatibel)
+Fragt Intelligence-Daten zu einer IP ab.
+
+- **Endpunkt**: `/v3/scene/ip_reputation`
+- **Methode**: `GET`
+- **Parameter**:
+  - `apikey`: Ihr persönlicher API-Schlüssel.
+  - `resource`: Die zu prüfende IP-Adresse.
+- **Beispiel**:
+  ```bash
+  curl "http://<server-ip>:8080/v3/scene/ip_reputation?apikey=IHR_KEY&resource=1.2.3.4"
+  ```
+- **Antwort**:
+  ```json
+  {
+      "code": 0,
+      "data": {
+          "1.2.3.4": {
+              "severity": "high",
+              "judgments": ["permanent blacklist"],
+              "update_time": "2024-01-01 12:00:00"
+          }
+      },
+      "message": "success"
+  }
+  ```
+
+### 2. Webhook (HFish Kompatibel)
+Empfängt Angriffs-Logs von HFish-Knoten.
+
+- **Endpunkt**: `/webhook`
+- **Methode**: `POST`
+- **Content-Type**: `application/json`
+- **Body**:
+  ```json
+  {
+      "attack_ip": "1.2.3.4"
+  }
+  ```
+
+### 3. Health Check
+Systemstatus überwachen.
+
+- **Endpunkt**: `/health`
+- **Methode**: `GET`
+- **Antwort**: `{"status": "ok"}`
 
 ## Technologie-Stack
 

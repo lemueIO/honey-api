@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>Schnelle Daten-Brücke für Sicherheit</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v1.2.2-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v1.2.2)
+  [![Version](https://img.shields.io/badge/version-v2.0.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.0.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -78,6 +78,40 @@ Sie können fragen, ob eine IP-Adresse gefährlich ist:
 ```bash
 curl "http://localhost:8080/v3/scene/ip_reputation?apikey=DEIN_SCHLUESSEL&resource=1.2.3.4"
 ```
+
+## API Dokumentation (Für Entwickler)
+
+### 1. IP prüfen (ThreatBook v3)
+Hier fragt man ab, ob eine IP böse ist.
+
+- **Adresse**: `/v3/scene/ip_reputation`
+- **Art**: `GET`
+- **Was man braucht**:
+  - `apikey`: Den Schlüssel.
+  - `resource`: Die IP-Adresse.
+- **Beispiel**:
+  ```bash
+  curl "http://<server-ip>:8080/v3/scene/ip_reputation?apikey=DEIN_SCHLUESSEL&resource=1.2.3.4"
+  ```
+
+### 2. Daten empfangen (Webhook)
+Hier kommen die Daten von den Fallen an.
+
+- **Adresse**: `/webhook`
+- **Art**: `POST`
+- **Inhalt**:
+  ```json
+  {
+      "attack_ip": "1.2.3.4"
+  }
+  ```
+
+### 3. Status prüfen (Health)
+Prüfen, ob das System läuft.
+
+- **Adresse**: `/health`
+- **Art**: `GET`
+- **Antwort**: `{"status": "ok"}`
 
 ## Technik
 

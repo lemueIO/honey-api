@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-01-09
+
+### Added
+- **API Documentation**: Comprehensive documentation for API endpoints (`/v3/scene/ip_reputation`, `/webhook`, `/health`) added to READMEs in all supported languages (EN, DE, DE-Simple, UA).
+
+### Changed
+- **Versioning**: Major version bump to v2.0.0 to reflect the stability and feature completeness of the API.
+
 ## [1.2.2] - 2026-01-09
 
 ### Added
