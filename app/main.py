@@ -129,30 +129,89 @@ async def fetch_osint_feeds():
         try:
             logger.info("Fetching OSINT feeds...")
             count = 0 
-            # Feodo Tracker
-            feodo_url = "https://feodotracker.abuse.ch/downloads/ipblocklist.txt"
-            r = requests.get(feodo_url, timeout=10)
-            if r.status_code == 200:
-                for line in r.text.splitlines():
-                    if line and not line.startswith("#"):
-                        # Store for 90 days
-                        REDIS_CLIENT.setex(f"{KEY_OSINT}{line.strip()}", timedelta(days=90), datetime.now().isoformat())
-                        count += 1
             
-            # IPSum (Simplified, just TOP level)
-            ipsum_url = "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt"
-            r = requests.get(ipsum_url, timeout=10)
-            if r.status_code == 200:
-                for line in r.text.splitlines():
-                    if line and not line.startswith("#"):
-                        parts = line.split()
-                        if len(parts) > 1 and int(parts[1]) > 3: # Only high-confidence IPs
-                             REDIS_CLIENT.setex(f"{KEY_OSINT}{parts[0]}", timedelta(days=90), datetime.now().isoformat())
-                             count += 1
+            def process_text_feed(url, timeout=10):
+                local_count = 0
+                try:
+                    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Honey-API-Bridge/1.0"})
+                    if r.status_code == 200:
+                        for line in r.text.splitlines():
+                            line = line.strip()
+                            if line and not line.startswith("#") and not line.startswith("//"):
+                                # Basic IP validation/cleaning
+                                ip = line.split()[0].strip() # Handle potential comments
+                                # Basic check if it looks like an IP
+                                if len(ip) > 6 and "." in ip and not "/" in ip:
+                                    key = f"{KEY_OSINT}{ip}"
+                                    if not REDIS_CLIENT.exists(key):
+                                        local_count += 1
+                                    REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
+                except Exception as ex:
+                    logger.error(f"Error fetching {url}: {ex}")
+                return local_count
+
+            # 1. Feodo Tracker
+            count += process_text_feed("https://feodotracker.abuse.ch/downloads/ipblocklist.txt")
             
+            # 2. IPSum (Top level)
+            try:
+                r = requests.get("https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", timeout=10)
+                if r.status_code == 200:
+                    for line in r.text.splitlines():
+                        if line and not line.startswith("#"):
+                            parts = line.split()
+                            if len(parts) > 1 and int(parts[1]) > 3:
+                                 ip = parts[0]
+                                 key = f"{KEY_OSINT}{ip}"
+                                 if not REDIS_CLIENT.exists(key):
+                                     count += 1
+                                 REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
+            except Exception as e:
+                logger.error(f"Error fetching IPSum: {e}")
+
+            # 3. CINS Army
+            count += process_text_feed("http://cinsscore.com/list/ci-badguys.txt")
+
+            # 4. GreenSnow
+            count += process_text_feed("https://blocklist.greensnow.co/greensnow.txt")
+
+            # 5. Blocklist.de
+            count += process_text_feed("https://lists.blocklist.de/lists/all.txt")
+
+            # 6. Emerging Threats
+            count += process_text_feed("https://rules.emergingthreats.net/blockrules/compromised-ips.txt")
+
+            # 7. BinaryDefense
+            count += process_text_feed("https://www.binarydefense.com/banlist.txt")
+
+            # 8. DShield
+            count += process_text_feed("https://feeds.dshield.org/block.txt")
+
+            # 9. DigitalSide
+            count += process_text_feed("https://osint.digitalside.it/Threat-Intel/lists/latestips.txt")
+
+            # 10. ThreatFox (CSV parsing)
+            try:
+                r = requests.get("https://threatfox.abuse.ch/export/csv/ip-port/recent/", timeout=15)
+                if r.status_code == 200:
+                    for line in r.text.splitlines():
+                        if line and not line.startswith("#") and "ip:port" in line:
+                           parts = line.split(",")
+                           if len(parts) > 2:
+                               ioc_value = parts[2].replace('"', '')
+                               if ":" in ioc_value: # strip port
+                                   ioc_value = ioc_value.split(":")[0]
+                               
+                               key = f"{KEY_OSINT}{ioc_value}"
+                               if not REDIS_CLIENT.exists(key):
+                                   count += 1
+                               REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
+            except Exception as e:
+                logger.error(f"Error fetching ThreatFox: {e}")
+
             # Store last update stats
             REDIS_CLIENT.set("stats:last_osint_count", count)
-            logger.info(f"OSINT feeds updated. Added/Refreshed {count} IPs.")
+            logger.info(f"OSINT feeds updated. Added {count} new IPs.")
         except Exception as e:
             logger.error(f"Error fetching OSINT: {e}")
         
@@ -255,8 +314,10 @@ async def get_stats(user: str = Depends(get_current_user)):
     # Check External API Status
     api_up = False
     try:
-        # Just check connectivity (simple GET), usually returns 404 or something but connection works
-        requests.get("https://api.sec.lemue.org", timeout=2)
+        # Just check connectivity (simple GET)
+        # We consider it "UP" if we get ANY valid HTTP response (even 404/405/403), 
+        # as long as the server is reachable.
+        resp = requests.get("https://api.sec.lemue.org", timeout=2, headers={"User-Agent": "Honey-API-Bridge/1.0"})
         api_up = True
     except:
         api_up = False
