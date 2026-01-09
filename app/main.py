@@ -235,6 +235,17 @@ async def ip_reputation(resource: str, apikey: str):
         raise HTTPException(status_code=403, detail="Invalid API Key")
     
     severity, judgments = get_ip_reputation(resource)
+    
+    # Logging with emojis
+    if severity == "high":
+        logger.info(f"💀 High Risk IP Check: {resource} - {judgments}")
+    elif severity == "medium":
+        logger.info(f"⚠️ Medium Risk IP Check: {resource} - {judgments}")
+    elif "whitelist" in judgments:
+        logger.info(f"🛡️ Whitelisted IP Check: {resource}")
+    else:
+        logger.info(f"🔍 Clean IP Check: {resource}")
+        
     return format_threatbook_v3(resource, severity, judgments)
 
 @app.post("/webhook")
