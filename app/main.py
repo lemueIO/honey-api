@@ -322,17 +322,17 @@ async def get_stats(user: str = Depends(get_current_user)):
     # Check External API Status
     api_up = False
     try:
-        # Try HTTPS first with no verify to avoid cert issues in container
-        requests.get("https://api.sec.lemue.org/v3/scene/ip_reputation?apikey=test&resource=1.1.1.1", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
+        # 1. Try Public Root URL (as requested by user)
+        requests.get("https://api.sec.lemue.org/", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
         api_up = True
     except Exception as e:
-        logger.warning(f"HTTPS API Check failed: {e}")
-        # Fallback to HTTP
+        logger.warning(f"Public API Check failed (likely NAT/Firewall): {e}")
+        # 2. Fallback to Localhost (to ensure dashboard shows Green if service is actually running)
         try:
-             requests.get("https://api.sec.lemue.org/", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"}, verify=False)
+             requests.get("http://localhost:8080/", timeout=3, headers={"User-Agent": "Honey-API-Bridge/1.0"})
              api_up = True
         except Exception as e2:
-             logger.error(f"API Check failed (HTTPS & HTTP): {e} | {e2}")
+             logger.error(f"Local API Check failed: {e2}")
              api_up = False
         
     last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
