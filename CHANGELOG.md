@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-01-09
+
+### Added
+-   **WebUI Enhancements**:
+    -   Added top-right navigation menu to the Login page with quick links (GitHub, Feed, Banned IPs, HFish Login).
+    -   Implemented 15-second auto-refresh for both Dashboard and Login pages.
+    -   Added custom favicon (`favicon-lemue.ico`) for the HFish login link.
+-   **Documentation**: Added badges and improved header in `README.md`.
+
+### Changed
+-   **UI Adjustments**:
+    -   Aligned Login page icons using flexbox.
+    -   Resized HFish login icon to 26px for better visual consistency.
+    -   Updated HFish login link to point to `https://lemue.org/` with lowercase tooltip.
+-   **Sync Logic**: Verified and finalized the synchronization backlog processing (reduced from ~15k to ~0 backlog).
+
 ## [1.0.0] - 2026-01-09
 
 ### Added
