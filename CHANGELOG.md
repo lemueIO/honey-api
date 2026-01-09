@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.2] - 2026-01-09
+
+### Added
+- **Visuals**: Updated dashboard screenshot (`assets/dashboard_preview.png`) to reflect recent UI improvements and data state.
+
+### Changed
+- **Documentation**: Final polish of all documentation files, ensuring consistency and clarity across all supported languages.
+- **Versioning**: Officially bumped version to v1.2.2.
+
 ## [1.2.1] - 2026-01-09
 
 ### Added
