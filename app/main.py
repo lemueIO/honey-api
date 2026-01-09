@@ -12,13 +12,22 @@ import redis
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Configuration ---
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 REDIS_CLIENT = redis.from_url(REDIS_URL, decode_responses=True)
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
+SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", "change-me-at-all-costs")
 
 app = FastAPI(title="Threat Intelligence Bridge")
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
+
 templates = Jinja2Templates(directory="app/templates")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,6 +42,14 @@ KEY_BLACKLIST = "ti:blacklist"
 KEY_LOCAL = "ti:local:"  # ti:local:{ip} -> date
 KEY_OSINT = "ti:osint:"   # ti:osint:{ip} -> date
 KEY_API_KEYS = "ti:api_keys"
+KEY_API_KEYS_V2 = "ti:api_keys_v2" # Hash: key -> name
+
+# --- Auth Dependency ---
+def get_current_user(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return None
+    return user
 
 # --- Logic ---
 
@@ -107,7 +124,8 @@ async def startup_event():
 
 @app.get("/v3/ip/reputation")
 async def ip_reputation(resource: str, apikey: str):
-    if not REDIS_CLIENT.sismember(KEY_API_KEYS, apikey):
+    # Check both old and new keys for compatibility
+    if not REDIS_CLIENT.sismember(KEY_API_KEYS, apikey) and not REDIS_CLIENT.hexists(KEY_API_KEYS_V2, apikey):
         raise HTTPException(status_code=403, detail="Invalid API Key")
     
     severity, judgments = get_ip_reputation(resource)
@@ -119,17 +137,45 @@ async def hfish_webhook(data: HFishWebhook):
     REDIS_CLIENT.setex(f"{KEY_LOCAL}{data.attack_ip}", timedelta(days=365), datetime.now().isoformat())
     return {"status": "ok"}
 
+# --- Auth Routes ---
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.post("/login")
+async def login(request: Request, password: str = Form(...)):
+    if password == ADMIN_PASSWORD:
+        request.session["user"] = "admin"
+        return RedirectResponse(url="/", status_code=303)
+    return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid password"})
+
+@app.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
+
 # --- Dashboard Routes ---
 
 @app.get("/", response_class=HTMLResponse)
-async def dashboard(request: Request):
+async def dashboard(request: Request, user: str = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse(url="/login")
+        
     # Stats
     local_ips = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
     osint_ips = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
-    api_keys = list(REDIS_CLIENT.smembers(KEY_API_KEYS))
+    # API Keys V2
+    api_keys_dict = REDIS_CLIENT.hgetall(KEY_API_KEYS_V2)
+    # Support legacy keys (no name)
+    legacy_keys = REDIS_CLIENT.smembers(KEY_API_KEYS)
+    for lk in legacy_keys:
+        if lk not in api_keys_dict:
+            api_keys_dict[lk] = "Legacy Key"
+            
     blacklist = list(REDIS_CLIENT.smembers(KEY_BLACKLIST))
     whitelist = list(REDIS_CLIENT.smembers(KEY_WHITELIST))
     
@@ -141,24 +187,28 @@ async def dashboard(request: Request):
             "blacklist": blacklist_count,
             "whitelist": whitelist_count
         },
-        "api_keys": api_keys,
+        "api_keys": api_keys_dict,
         "blacklist": blacklist,
         "whitelist": whitelist
     })
 
 @app.post("/api-key/generate")
-async def generate_key():
+async def generate_key(name: str = Form(...), user: str = Depends(get_current_user)):
+    if not user: return RedirectResponse(url="/login")
     new_key = str(uuid.uuid4())
-    REDIS_CLIENT.sadd(KEY_API_KEYS, new_key)
+    REDIS_CLIENT.hset(KEY_API_KEYS_V2, new_key, name)
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/api-key/delete")
-async def delete_key(key: str = Form(...)):
-    REDIS_CLIENT.srem(KEY_API_KEYS, key)
+async def delete_key(key: str = Form(...), user: str = Depends(get_current_user)):
+    if not user: return RedirectResponse(url="/login")
+    REDIS_CLIENT.hdel(KEY_API_KEYS_V2, key)
+    REDIS_CLIENT.srem(KEY_API_KEYS, key) # Also remove from legacy just in case
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/list/add")
-async def add_to_list(ip: str = Form(...), list_type: str = Form(...)):
+async def add_to_list(ip: str = Form(...), list_type: str = Form(...), user: str = Depends(get_current_user)):
+    if not user: return RedirectResponse(url="/login")
     if list_type == "blacklist":
         REDIS_CLIENT.sadd(KEY_BLACKLIST, ip)
     elif list_type == "whitelist":
@@ -166,7 +216,8 @@ async def add_to_list(ip: str = Form(...), list_type: str = Form(...)):
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/list/remove")
-async def remove_from_list(ip: str = Form(...), list_type: str = Form(...)):
+async def remove_from_list(ip: str = Form(...), list_type: str = Form(...), user: str = Depends(get_current_user)):
+    if not user: return RedirectResponse(url="/login")
     if list_type == "blacklist":
         REDIS_CLIENT.srem(KEY_BLACKLIST, ip)
     elif list_type == "whitelist":

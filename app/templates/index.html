@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,29 +8,71 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border-radius: 10px; border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .stat-card { color: #fff; }
-        .bg-local { background: linear-gradient(45deg, #4e73df, #224abe); }
-        .bg-osint { background: linear-gradient(45deg, #1cc88a, #13855c); }
-        .bg-blacklist { background: linear-gradient(45deg, #e74a3b, #be2617); }
-        .bg-whitelist { background: linear-gradient(45deg, #f6c23e, #dda20a); }
-        .btn-primary { background-color: #4e73df; border-color: #4e73df; }
-        .btn-primary:hover { background-color: #2e59d9; border-color: #2653d4; }
-        .table-responsive { max-height: 400px; overflow-y: auto; }
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card {
+            color: #fff;
+        }
+
+        .bg-local {
+            background: linear-gradient(45deg, #4e73df, #224abe);
+        }
+
+        .bg-osint {
+            background: linear-gradient(45deg, #1cc88a, #13855c);
+        }
+
+        .bg-blacklist {
+            background: linear-gradient(45deg, #e74a3b, #be2617);
+        }
+
+        .bg-whitelist {
+            background: linear-gradient(45deg, #f6c23e, #dda20a);
+        }
+
+        .btn-primary {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            border-color: #2653d4;
+        }
+
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="#"><i class="bi bi-shield-check"></i> TI Bridge</a>
+            <div class="ms-auto">
+                <a href="/logout" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</a>
+            </div>
         </div>
     </nav>
 
     <div class="container pb-5">
         <!-- Stats Row -->
-        <div class="row g-4 mb-4 text-center">
+        <div class="row g-4 mb-5 text-center">
             <div class="col-md-3">
                 <div class="card stat-card bg-local h-100">
                     <div class="card-body">
@@ -70,37 +113,58 @@
 
         <div class="row g-4">
             <!-- API Key Management -->
-            <div class="col-lg-4">
-                <div class="card h-100">
+            <div class="col-12">
+                <div class="card mb-4">
                     <div class="card-header bg-white py-3 border-0">
                         <h5 class="mb-0"><i class="bi bi-key-fill text-primary"></i> API Key Management</h5>
                     </div>
                     <div class="card-body">
-                        <form action="/api-key/generate" method="post" class="mb-3">
-                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i> Generate New Key</button>
+                        <form action="/api-key/generate" method="post" class="row g-3 mb-4">
+                            <div class="col-md-9">
+                                <input type="text" name="name" class="form-control"
+                                    placeholder="Key Name (e.g. HFish Node 1)" required>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i>
+                                    Generate New Key</button>
+                            </div>
                         </form>
-                        <div class="table-responsive">
+                        <div class="table-responsive" style="max-height: none;">
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>Name</th>
                                         <th>Key</th>
                                         <th class="text-end">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for key in api_keys %}
+                                    {% for key, name in api_keys.items() %}
                                     <tr>
-                                        <td class="text-truncate" style="max-width: 150px;" title="{{ key }}"><code>{{ key }}</code></td>
+                                        <td class="fw-bold">{{ name }}</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <code class="form-control bg-light border-0 py-2">{{ key }}</code>
+                                                <button class="btn btn-outline-secondary btn-sm border-0 bg-light"
+                                                    type="button" onclick="copyToClipboard('{{ key }}', this)">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </div>
+                                        </td>
                                         <td class="text-end">
-                                            <form action="/api-key/delete" method="post" onsubmit="return confirm('Delete this key?');">
+                                            <form action="/api-key/delete" method="post"
+                                                onsubmit="return confirm('WARNING: Are you sure you want to delete this API key? This action cannot be undone and will break any services using this key.');">
                                                 <input type="hidden" name="key" value="{{ key }}">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                                <button type="submit" class="btn btn-outline-danger btn-sm"><i
+                                                        class="bi bi-trash"></i> Delete</button>
                                             </form>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                     {% if not api_keys %}
-                                    <tr><td colspan="2" class="text-center text-muted">No API keys generated</td></tr>
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">No API keys generated</td>
+                                    </tr>
                                     {% endif %}
                                 </tbody>
                             </table>
@@ -110,15 +174,16 @@
             </div>
 
             <!-- List Management -->
-            <div class="col-lg-8">
-                <div class="card h-100">
+            <div class="col-12">
+                <div class="card">
                     <div class="card-header bg-white py-3 border-0">
                         <h5 class="mb-0"><i class="bi bi-list-stars text-primary"></i> List Management</h5>
                     </div>
                     <div class="card-body">
-                        <form action="/list/add" method="post" class="row g-2 mb-4">
+                        <form action="/list/add" method="post" class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <input type="text" name="ip" class="form-control" placeholder="IP Address (e.g. 1.2.3.4)" required>
+                                <input type="text" name="ip" class="form-control"
+                                    placeholder="IP Address (e.g. 1.2.3.4)" required>
                             </div>
                             <div class="col-md-3">
                                 <select name="list_type" class="form-select">
@@ -127,61 +192,92 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary w-100">Add Entry</button>
+                                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle"></i>
+                                    Add Entry</button>
                             </div>
                         </form>
 
-                        <div class="row">
+                        <div class="row g-4">
                             <!-- Blacklist Display -->
-                            <div class="col-md-6 border-end">
-                                <h6 class="fw-bold mb-3"><i class="bi bi-shield-slash text-danger"></i> Permanent Blacklist</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover">
-                                        <thead><tr><th>IP</th><th class="text-end">Action</th></tr></thead>
-                                        <tbody>
-                                            {% for ip in blacklist %}
-                                            <tr>
-                                                <td>{{ ip }}</td>
-                                                <td class="text-end">
-                                                    <form action="/list/remove" method="post" class="d-inline">
-                                                        <input type="hidden" name="ip" value="{{ ip }}">
-                                                        <input type="hidden" name="list_type" value="blacklist">
-                                                        <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle"></i></button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                            {% if not blacklist %}
-                                            <tr><td colspan="2" class="text-center text-muted">Empty</td></tr>
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light bg-opacity-50">
+                                    <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-shield-slash text-danger"></i> Permanent Blacklist</span>
+                                        <span class="badge bg-danger rounded-pill">{{ stats.blacklist }}</span>
+                                    </h6>
+                                    <div class="table-responsive" style="max-height: 300px;">
+                                        <table class="table table-sm table-hover bg-white">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>IP</th>
+                                                    <th class="text-end">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for ip in blacklist %}
+                                                <tr>
+                                                    <td class="font-monospace">{{ ip }}</td>
+                                                    <td class="text-end">
+                                                        <form action="/list/remove" method="post" class="d-inline"
+                                                            onsubmit="return confirm('Remove {{ ip }} from blacklist?');">
+                                                            <input type="hidden" name="ip" value="{{ ip }}">
+                                                            <input type="hidden" name="list_type" value="blacklist">
+                                                            <button type="submit"
+                                                                class="btn btn-link text-danger p-0"><i
+                                                                    class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                                {% if not blacklist %}
+                                                <tr>
+                                                    <td colspan="2" class="text-center text-muted py-3">Empty</td>
+                                                </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                             <!-- Whitelist Display -->
                             <div class="col-md-6">
-                                <h6 class="fw-bold mb-3"><i class="bi bi-shield-check text-success"></i> Permanent Whitelist</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover">
-                                        <thead><tr><th>IP</th><th class="text-end">Action</th></tr></thead>
-                                        <tbody>
-                                            {% for ip in whitelist %}
-                                            <tr>
-                                                <td>{{ ip }}</td>
-                                                <td class="text-end">
-                                                    <form action="/list/remove" method="post" class="d-inline">
-                                                        <input type="hidden" name="ip" value="{{ ip }}">
-                                                        <input type="hidden" name="list_type" value="whitelist">
-                                                        <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-x-circle"></i></button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                            {% if not whitelist %}
-                                            <tr><td colspan="2" class="text-center text-muted">Empty</td></tr>
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
+                                <div class="p-3 border rounded bg-light bg-opacity-50">
+                                    <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-shield-check text-success"></i> Permanent Whitelist</span>
+                                        <span class="badge bg-success rounded-pill">{{ stats.whitelist }}</span>
+                                    </h6>
+                                    <div class="table-responsive" style="max-height: 300px;">
+                                        <table class="table table-sm table-hover bg-white">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>IP</th>
+                                                    <th class="text-end">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for ip in whitelist %}
+                                                <tr>
+                                                    <td class="font-monospace">{{ ip }}</td>
+                                                    <td class="text-end">
+                                                        <form action="/list/remove" method="post" class="d-inline"
+                                                            onsubmit="return confirm('Remove {{ ip }} from whitelist?');">
+                                                            <input type="hidden" name="ip" value="{{ ip }}">
+                                                            <input type="hidden" name="list_type" value="whitelist">
+                                                            <button type="submit"
+                                                                class="btn btn-link text-danger p-0"><i
+                                                                    class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                                {% if not whitelist %}
+                                                <tr>
+                                                    <td colspan="2" class="text-center text-muted py-3">Empty</td>
+                                                </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -192,5 +288,18 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = btn.querySelector('i');
+                const originalClass = icon.className;
+                icon.className = 'bi bi-check2 text-success';
+                setTimeout(() => {
+                    icon.className = originalClass;
+                }, 2000);
+            });
+        }
+    </script>
 </body>
+
 </html>

@@ -1,0 +1,6 @@
+# Cursor Rules for Honey-API
+
+- You are allowed to autonomously start, stop, and restart Docker containers using `docker-compose`.
+- Use `docker-compose up -d --build` to apply changes and restart the environment.
+- When making backend changes that affect the Docker environment, always ensure the containers are restarted to reflect the changes.
+- You can run these commands directly in the terminal.

@@ -4,3 +4,5 @@ redis
 jinja2
 requests
 python-multipart
+python-dotenv
+itsdangerous
