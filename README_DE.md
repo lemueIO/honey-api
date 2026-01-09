@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>Hochperformante Threat Intelligence Bridge & Aggregator</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v1.2.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v1.2.0)
+  [![Version](https://img.shields.io/badge/version-v1.2.1-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v1.2.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -30,13 +30,18 @@ Honey Cloud Intelligence ist eine hochperformante Threat Intelligence Bridge, di
 
 ## Funktionen
 
--   **Bedrohungsdatenerfassung**: Kombiniert lokale Honeypot-Daten mit externen OSINT-Feeds.
--   **Hohe Performance**: Basiert auf Redis für Antworten im Sub-Millisekunden-Bereich.
--   **API-Emulation**: Vollständig kompatibel mit dem ThreatBook v3 API-Standard.
+-   **Bedrohungsdatenerfassung**: Kombiniert Echtzeitdaten von lokalen Honeypots (via HFish) mit über 10 externen OSINT-Feeds.
+-   **Hohe Performance**: Basiert auf FastAPI und Redis für Antworten im Sub-Millisekunden-Bereich.
+-   **API-Emulation**: Vollständig kompatibel mit dem **ThreatBook v3 API**-Standard.
 -   **Intelligente Filterung**:
     -   **Whitelist/Blacklist**: Unterstützt exakte IP-Übereinstimmungen und CIDR-Bereiche (z. B. `10.0.0.0/24`).
     -   **Priorisierung**: Benutzerdefinierte Logik zur Priorisierung lokaler Bedrohungen und manueller Listen gegenüber OSINT-Daten.
+-   **Robustes Monitoring**:
+    -   **Resiliente Prüfung**: Integrierte Socket-Prüfung (Ports 443, 8080), die HTTP-Deadlocks vermeidet.
+    -   **Externe Verifizierung**: Direkte Links zu Check-Host.net und ein portables Skript für globale Konnektivitätstests.
+    -   **Health-Endpunkt**: Dedizierte `/health`-Route zur Statusüberwachung.
 -   **Modernes UI**: Dashboard im Dark Mode zur Verwaltung von Listen, API-Schlüsseln und zur Ansicht von Statistiken.
+-   **Mehrsprachigkeit**: Vollständige Dokumentation in Englisch, Deutsch (Standard & Einfache Sprache) und Ukrainisch.
 -   **Containerisiert**: Erstellt mit Docker und Docker Compose für eine einfache Bereitstellung.
 
 ## Zugriff & API-Schlüssel
@@ -76,10 +81,10 @@ curl "http://localhost:8080/v3/scene/ip_reputation?apikey=IHR_API_KEY&resource=1
 
 ## Technologie-Stack
 
--   **Backend**: FastAPI (Python)
--   **Datenbank**: Redis
--   **Frontend**: Jinja2 Templates, Bootstrap 5 (Dark Mode)
--   **Deployment**: Docker
+-   **Backend**: FastAPI (Python 3.9+)
+-   **Datenbank**: Redis (Key-Value Storage)
+-   **Frontend**: Jinja2 Templates, Bootstrap 5 (Dark Mode Design)
+-   **Deployment**: Docker & Docker Compose
 
 ---
 

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-01-09
+
+### Added
+- **Visuals**: Captured fresh, high-quality dashboard screenshot (`assets/dashboard_preview.png`) with sensitive data blurred.
+
+### Changed
+- **Documentation**: 
+    - Comprehensive overhaul of `README.md` with complete feature descriptions, monitoring details, and architecture overview.
+    - Synchronized all translations (`DE`, `DE2`, `UA`) with the new English content.
+- **Versioning**: Officially bumped version to v1.2.1.
+
 ## [1.2.0] - 2026-01-09
 
 ### Added
