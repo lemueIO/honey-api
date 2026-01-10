@@ -35,12 +35,39 @@ echo "Applying fix..."
 
 docker exec $CONTAINER_NAME sed -i 's|location /cloud/ {|location /cloud/ {\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection "upgrade";\n    proxy_http_version 1.1;\n    proxy_pass http://uptime-kuma:3001/;|' $CONF_FILE
 
-# Verify if proxy_pass was already there and we doubled it? 
-# The above sed is a bit risky if the block structure varies. 
-# A safer approach might be to just ensure the trailing slash exists if it's missing.
-
 # Alternative: Replace `proxy_pass http://uptime-kuma:3001;` with `proxy_pass http://uptime-kuma:3001/;`
 docker exec $CONTAINER_NAME sed -i 's|proxy_pass http://uptime-kuma:3001;|proxy_pass http://uptime-kuma:3001/;|g' $CONF_FILE
+
+echo "Adding extra location blocks for Uptime Kuma root support..."
+
+# Function to add location block if missing
+add_location_block() {
+    local PATH=$1
+    local PROXY_PASS=$2
+    
+    # Check if location block already exists to avoid duplication
+    if docker exec $CONTAINER_NAME grep -q "location $PATH" $CONF_FILE; then
+        echo "Location $PATH already exists. Skipping..."
+    else
+        echo "Adding location $PATH..."
+        # Insert before the last closing brace (assuming it ends the server block)
+        # We search for the last line consisting of just "}" or similar, simplifying by appending to file end but before last }
+        # Actually, let's use a specialized sed to insert before the very last line
+        docker exec $CONTAINER_NAME sed -i "\$i \\
+  location $PATH {\\
+    proxy_pass $PROXY_PASS;\\
+    proxy_set_header Upgrade \$http_upgrade;\\
+    proxy_set_header Connection \"upgrade\";\\
+    proxy_http_version 1.1;\\
+    proxy_set_header X-Real-IP \$remote_addr;\\
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\\
+  }" $CONF_FILE
+    fi
+}
+
+add_location_block "/upload/" "http://uptime-kuma:3001/upload/"
+add_location_block "/socket.io/" "http://uptime-kuma:3001/socket.io/"
+add_location_block "/api/status-page/" "http://uptime-kuma:3001/api/status-page/"
 
 # Check syntax
 echo "Checking Nginx configuration..."
