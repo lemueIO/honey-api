@@ -33,10 +33,29 @@ docker exec $CONTAINER_NAME cp $CONF_FILE $CONF_FILE.bak
 
 echo "Applying fix..."
 
-docker exec $CONTAINER_NAME sed -i 's|location /cloud/ {|location /cloud/ {\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection "upgrade";\n    proxy_http_version 1.1;\n    proxy_pass http://uptime-kuma:3001/;|' $CONF_FILE
-
-# Alternative: Replace `proxy_pass http://uptime-kuma:3001;` with `proxy_pass http://uptime-kuma:3001/;`
-docker exec $CONTAINER_NAME sed -i 's|proxy_pass http://uptime-kuma:3001;|proxy_pass http://uptime-kuma:3001/;|g' $CONF_FILE
+# 0. /cloud/
+PATH_LOC="/cloud/"
+PROXY="http://uptime-kuma:3001/"
+if docker exec $CONTAINER_NAME grep -q "location .*$PATH_LOC" $CONF_FILE; then
+    echo "Location $PATH_LOC exists. Updating proxy_pass..."
+    # If it exists, we assume it might be the simple version, so we try to update it to include the subfolder fix
+    # We replace the whole block start to try and inject headers if possible, or just the proxy_pass line
+    # For safety/simplicity, let's just use the sed replace we had, but only if it exists
+    docker exec $CONTAINER_NAME sed -i 's|location /cloud/ {|location /cloud/ {\n    proxy_set_header X-Real-IP $remote_addr;\n    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    proxy_set_header Upgrade $http_upgrade;\n    proxy_set_header Connection "upgrade";\n    proxy_http_version 1.1;\n    proxy_pass http://uptime-kuma:3001/;|' $CONF_FILE
+    # Also ensure trailing slash if passing to root
+    docker exec $CONTAINER_NAME sed -i 's|proxy_pass http://uptime-kuma:3001;|proxy_pass http://uptime-kuma:3001/;|g' $CONF_FILE
+else
+    echo "Adding location $PATH_LOC..."
+    docker exec $CONTAINER_NAME sed -i "\$i \\
+  location $PATH_LOC {\\
+    proxy_pass $PROXY;\\
+    proxy_set_header Upgrade \$http_upgrade;\\
+    proxy_set_header Connection \"upgrade\";\\
+    proxy_http_version 1.1;\\
+    proxy_set_header X-Real-IP \$remote_addr;\\
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\\
+  }" $CONF_FILE
+fi
 
 echo "Adding extra location blocks for Uptime Kuma root support..."
 
