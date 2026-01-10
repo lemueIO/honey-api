@@ -28,7 +28,7 @@ Honey Cloud Intelligence ist ein Programm für Sicherheit. Es sammelt Daten übe
   <em>Das Dashboard zeigt Statistiken und ist dunkel gestaltet.</em>
 </div>
 
-## 🚀 Was kann das Programm? [🔗](#was-kann-das-programm)
+## [🚀](#was-kann-das-programm) Was kann das Programm?
 
 -   **Daten sammeln**: Es nimmt Daten von innen und außen (Echtzeit + OSINT).
 -   **Schnelligkeit**: Es benutzt Redis. Das macht es sehr schnell.
@@ -45,13 +45,13 @@ Honey Cloud Intelligence ist ein Programm für Sicherheit. Es sammelt Daten übe
 -   **Sprachen**: Es gibt das Programm und die Hilfe in Englisch, Deutsch und Ukrainisch.
 -   **Einfachheit**: Es läuft in Containern (Docker). Das macht die Installation leicht.
 
-## 🔑 Zugang und Schlüssel [🔗](#zugang-und-schlüssel)
+## [🔑](#zugang-und-schlüssel) Zugang und Schlüssel
 
 > [!IMPORTANT]
 > **Schlüssel sind geheim.**
 > Nicht jeder darf das Programm benutzen. Man braucht einen Schlüssel (API Key). Den bekommt man nur vom Administrator. Bitte fragen Sie nach einem Schlüssel.
 
-## 📦 Installation [🔗](#installation)
+## [📦](#installation) Installation
 
 1.  Programm herunterladen:
     ```bash
@@ -68,21 +68,21 @@ Honey Cloud Intelligence ist ein Programm für Sicherheit. Es sammelt Daten übe
     -   Gehen Sie auf: `http://localhost:8080/login`
     -   Passwort: `admin` (Bitte sofort ändern!)
 
-## 💻 Benutzung [🔗](#benutzung)
+## [💻](#benutzung) Benutzung
 
-### 🔄 Daten senden [🔗](#daten-senden)
+### [🔄](#daten-senden) Daten senden
 Andere Programme (HFish) können Daten hierhin schicken. Die Adresse ist:
 `http://<deine-server-ip>:8080/api/v1/webhook`
 
-### 🕵️ Nach Gefahren fragen [🔗](#nach-gefahren-fragen)
+### [🕵️](#nach-gefahren-fragen) Nach Gefahren fragen
 Sie können fragen, ob eine IP-Adresse gefährlich ist:
 ```bash
 curl "http://localhost:8080/v3/scene/ip_reputation?apikey=DEIN_SCHLUESSEL&resource=1.2.3.4"
 ```
 
-## 📖 API Dokumentation (Für Entwickler) [🔗](#api-dokumentation-für-entwickler)
+## [📖](#api-dokumentation-für-entwickler) API Dokumentation (Für Entwickler)
 
-### 1. 🧠 IP prüfen (ThreatBook v3) [🔗](#1-ip-prüfen-threatbook-v3)
+### 1. [🧠](#1-ip-prüfen-threatbook-v3) IP prüfen (ThreatBook v3)
 Hier fragt man ab, ob eine IP böse ist.
 
 - **Adresse**: `/v3/scene/ip_reputation`
@@ -95,7 +95,7 @@ Hier fragt man ab, ob eine IP böse ist.
   curl "http://<server-ip>:8080/v3/scene/ip_reputation?apikey=DEIN_SCHLUESSEL&resource=1.2.3.4"
   ```
 
-### 2. 🎣 Daten empfangen (Webhook) [🔗](#2-daten-empfangen-webhook)
+### 2. [🎣](#2-daten-empfangen-webhook) Daten empfangen (Webhook)
 Hier kommen die Daten von den Fallen an.
 
 - **Adresse**: `/webhook`
@@ -107,14 +107,14 @@ Hier kommen die Daten von den Fallen an.
   }
   ```
 
-### 3. 💓 Status prüfen (Health) [🔗](#3-status-prüfen-health)
+### 3. [💓](#3-status-prüfen-health) Status prüfen (Health)
 Prüfen, ob das System läuft.
 
 - **Adresse**: `/health`
 - **Art**: `GET`
 - **Antwort**: `{"status": "ok"}`
 
-## 🛠️ Technik [🔗](#technik)
+## [🛠️](#technik) Technik
 
 -   **Programmierung**: Python 3.9+ (FastAPI)
 -   **Speicher**: Redis

@@ -28,7 +28,7 @@ Honey Cloud Intelligence ist eine hochperformante Threat Intelligence Bridge, di
   <em>Honey Cloud Intelligence Dashboard mit Dark Mode und IP-Statistiken</em>
 </div>
 
-## 🚀 Funktionen [🔗](#funktionen)
+## [🚀](#funktionen) Funktionen
 
 -   **Bedrohungsdatenerfassung**: Kombiniert Echtzeitdaten von lokalen Honeypots (via HFish) mit über 10 externen OSINT-Feeds.
 -   **Hohe Performance**: Basiert auf FastAPI und Redis für Antworten im Sub-Millisekunden-Bereich.
@@ -45,13 +45,13 @@ Honey Cloud Intelligence ist eine hochperformante Threat Intelligence Bridge, di
 -   **Mehrsprachigkeit**: Vollständige Dokumentation in Englisch, Deutsch (Standard & Einfache Sprache) und Ukrainisch.
 -   **Containerisiert**: Erstellt mit Docker und Docker Compose für eine einfache Bereitstellung.
 
-## 🔑 Zugriff & API-Schlüssel [🔗](#zugriff--api-schlüssel)
+## [🔑](#zugriff--api-schlüssel) Zugriff & API-Schlüssel
 
 > [!IMPORTANT]
 > **API-Schlüssel sind nicht öffentlich.**
 > Der Zugriff auf die Honey Cloud Intelligence API wird streng kontrolliert. API-Schlüssel werden nur nach direktem Kontakt mit dem Administrator vergeben. Bitte wenden Sie sich an den Projektbetreuer, um einen API-Schlüssel zu beantragen.
 
-## 📦 Installation [🔗](#installation)
+## [📦](#installation) Installation
 
 1.  Repository klonen:
     ```bash
@@ -68,21 +68,21 @@ Honey Cloud Intelligence ist eine hochperformante Threat Intelligence Bridge, di
     -   URL: `http://localhost:8080/login`
     -   Standard-Admin-Passwort: `admin` (Bitte sofort in der `docker-compose.yml` ändern!)
 
-## 💻 Nutzung [🔗](#nutzung)
+## [💻](#nutzung) Nutzung
 
-### 🔄 Daten synchronisieren [🔗](#daten-synchronisieren)
+### [🔄](#daten-synchronisieren) Daten synchronisieren
 Die Bridge akzeptiert Daten von HFish-Knoten über einen Webhook-Endpunkt. Stellen Sie sicher, dass Ihre HFish-Knoten so konfiguriert sind, dass sie Daten an folgende Adresse senden:
 `http://<ihre-server-ip>:8080/api/v1/webhook`
 
-### 🕵️ Risiko abfragen [🔗](#risiko-abfragen)
+### [🕵️](#risiko-abfragen) Risiko abfragen
 Fragen Sie die API im ThreatBook-Format ab:
 ```bash
 curl "http://localhost:8080/v3/scene/ip_reputation?apikey=IHR_API_KEY&resource=1.2.3.4"
 ```
 
-## 📖 API Dokumentation [🔗](#api-dokumentation)
+## [📖](#api-dokumentation) API Dokumentation
 
-### 1. 🧠 Reputations-Check (ThreatBook v3 Kompatibel) [🔗](#1-reputations-check-threatbook-v3-kompatibel)
+### 1. [🧠](#1-reputations-check-threatbook-v3-kompatibel) Reputations-Check (ThreatBook v3 Kompatibel)
 Fragt Intelligence-Daten zu einer IP ab.
 
 - **Endpunkt**: `/v3/scene/ip_reputation`
@@ -109,7 +109,7 @@ Fragt Intelligence-Daten zu einer IP ab.
   }
   ```
 
-### 2. 🎣 Webhook (HFish Kompatibel) [🔗](#2-webhook-hfish-kompatibel)
+### 2. [🎣](#2-webhook-hfish-kompatibel) Webhook (HFish Kompatibel)
 Empfängt Angriffs-Logs von HFish-Knoten.
 
 - **Endpunkt**: `/webhook`
@@ -122,14 +122,14 @@ Empfängt Angriffs-Logs von HFish-Knoten.
   }
   ```
 
-### 3. 💓 Health Check [🔗](#3-health-check)
+### 3. [💓](#3-health-check) Health Check
 Systemstatus überwachen.
 
 - **Endpunkt**: `/health`
 - **Methode**: `GET`
 - **Antwort**: `{"status": "ok"}`
 
-## 🛠️ Technologie-Stack [🔗](#technologie-stack)
+## [🛠️](#technologie-stack) Technologie-Stack
 
 -   **Backend**: FastAPI (Python 3.9+)
 -   **Datenbank**: Redis (Key-Value Storage)

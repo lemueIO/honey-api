@@ -29,7 +29,7 @@ Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge design
   <em>Honey Cloud Intelligence Dashboard with Dark Mode and IP Statistics</em>
 </div>
 
-## 🚀 Features [🔗](#features)
+## [🚀](#features) Features
 
 -   **Threat Data Aggregation**: Combines real-time data from local honeypots (via HFish) with 10+ external OSINT feeds.
 -   **High Performance**: Powered by FastAPI and Redis for sub-millisecond response times.
@@ -46,13 +46,13 @@ Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge design
 -   **Multi-language Support**: Full documentation available in English, German (Standard & Simple), and Ukrainian.
 -   **Containerized**: Built with Docker and Docker Compose for easy deployment.
 
-## 🔑 Access & API Keys [🔗](#access--api-keys)
+## [🔑](#access--api-keys) Access & API Keys
 
 > [!IMPORTANT]
 > **API Keys are not public.**
 > Access to the Honey Cloud Intelligence API is strictly controlled. API keys are only granted after direct contact with the administrator. Please contact the project maintainer to request an API key.
 
-## 📦 Installation [🔗](#installation)
+## [📦](#installation) Installation
 
 1.  Clone the repository:
     ```bash
@@ -69,21 +69,21 @@ Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge design
     -   URL: `http://localhost:8080/login`
     -   Default Admin Password: `admin` (Change immediately in `docker-compose.yml`!)
 
-## 💻 Usage [🔗](#usage)
+## [💻](#usage) Usage
 
-### 🔄 Synchronizing Data [🔗](#synchronizing-data)
+### [🔄](#synchronizing-data) Synchronizing Data
 The bridge accepts data from HFish nodes via a webhook endpoint. Ensure your HFish nodes are configured to send data to:
 `http://<your-server-ip>:8080/api/v1/webhook`
 
-### 🕵️ Querying Reputation [🔗](#querying-reputation)
+### [🕵️](#querying-reputation) Querying Reputation
 Query the API emulating the ThreatBook format:
 ```bash
 curl "http://localhost:8080/v3/scene/ip_reputation?apikey=YOUR_API_KEY&resource=1.2.3.4"
 ```
 
-## 📖 API Documentation [🔗](#api-documentation)
+## [📖](#api-documentation) API Documentation
 
-### 1. 🧠 Reputation Check (ThreatBook v3 Compatible) [🔗](#1-reputation-check-threatbook-v3-compatible)
+### 1. [🧠](#1-reputation-check-threatbook-v3-compatible) Reputation Check (ThreatBook v3 Compatible)
 Query IP reputation intelligence.
 
 - **Endpoint**: `/v3/scene/ip_reputation`
@@ -110,7 +110,7 @@ Query IP reputation intelligence.
   }
   ```
 
-### 2. 🎣 Webhook (HFish Compatible) [🔗](#2-webhook-hfish-compatible)
+### 2. [🎣](#2-webhook-hfish-compatible) Webhook (HFish Compatible)
 Receive attack logs from HFish nodes.
 
 - **Endpoint**: `/webhook`
@@ -123,14 +123,14 @@ Receive attack logs from HFish nodes.
   }
   ```
 
-### 3. 💓 Health Check [🔗](#3-health-check)
+### 3. [💓](#3-health-check) Health Check
 Monitor system status.
 
 - **Endpoint**: `/health`
 - **Method**: `GET`
 - **Response**: `{"status": "ok"}`
 
-## 🛠️ Technology Stack [🔗](#technology-stack)
+## [🛠️](#technology-stack) Technology Stack
 
 -   **Backend**: FastAPI (Python 3.9+)
 -   **Database**: Redis (Key-Value Storage)
