@@ -7,7 +7,6 @@ CUSTOM_CONF="/data/nginx/custom/server_proxy.conf"
 
 echo "Checking custom config: $CUSTOM_CONF in container $CONTAINER_NAME..."
 
-# Check if the custom config exists (it should, based on investigation)
 if ! docker exec $CONTAINER_NAME test -f $CUSTOM_CONF; then
     echo "Error: Custom configuration file $CUSTOM_CONF not found."
     exit 1
@@ -16,57 +15,44 @@ fi
 echo "Found custom config. Backing up..."
 docker exec $CONTAINER_NAME cp $CUSTOM_CONF $CUSTOM_CONF.bak
 
-# Function to add location block if missing
-# This avoids duplicates by checking grep first
+# Function to add location block
 add_location_block() {
     local BLOCK_PATH=$1
-    local CONTENT=$2
+    local PROXY_URL=$2
     
     echo "Checking for existing block for $BLOCK_PATH..."
     if docker exec $CONTAINER_NAME grep -q "location .*$BLOCK_PATH" $CUSTOM_CONF; then
         echo "Location $BLOCK_PATH already exists. Skipping..."
     else
         echo "Adding location $BLOCK_PATH..."
-        docker exec $CONTAINER_NAME sh -c "cat >> $CUSTOM_CONF <<EOF
+        # Use environment variables to pass dynamic values safely
+        # Use single quotes for sh -c to prevent local expansion
+        # Inside the single-quoted string, we write the HEREDOC
+        # We use \ to escape $host etc. inside the HEREDOC, because the remote shell will process the HEREDOC.
+        docker exec -e BLOCK_PATH="$BLOCK_PATH" -e PROXY_URL="$PROXY_URL" -e CUSTOM_CONF="$CUSTOM_CONF" $CONTAINER_NAME sh -c 'cat >> $CUSTOM_CONF <<EOF
 
-$CONTENT
-EOF"
+location $BLOCK_PATH {
+    proxy_pass $PROXY_URL;
+    proxy_set_header Host \$host;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_http_version 1.1;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+}
+EOF'
     fi
 }
 
-# 1. /upload/ (Fixes logo/icon)
-add_location_block "/upload/" "location /upload/ {
-    proxy_pass http://uptime-kuma:3001/upload/;
-    proxy_set_header Host \$host;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection \"upgrade\";
-    proxy_http_version 1.1;
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-}"
+# 1. /upload/
+add_location_block "/upload/" "http://uptime-kuma:3001/upload/"
 
-# 2. /api/status-page/ (Fixes manifest/status data)
-add_location_block "/api/status-page/" "location /api/status-page/ {
-    proxy_pass http://uptime-kuma:3001/api/status-page/;
-    proxy_set_header Host \$host;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection \"upgrade\";
-    proxy_http_version 1.1;
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-}"
+# 2. /api/status-page/
+add_location_block "/api/status-page/" "http://uptime-kuma:3001/api/status-page/"
 
-# 3. /socket.io/ (Check if it exists, if not add it. Existing one might be fine but let's be sure)
-# Note: The existing conf seemed to have /socket.io/ but broken? Or maybe valid.
-add_location_block "/socket.io/" "location /socket.io/ {
-    proxy_pass http://uptime-kuma:3001/socket.io/;
-    proxy_set_header Host \$host;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection \"upgrade\";
-    proxy_http_version 1.1;
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-}"
+# 3. /socket.io/
+add_location_block "/socket.io/" "http://uptime-kuma:3001/socket.io/"
+
 
 # Check syntax
 echo "Checking Nginx configuration..."
@@ -81,4 +67,4 @@ fi
 echo "Reloading Nginx..."
 docker exec $CONTAINER_NAME nginx -s reload
 
-echo "Done! Please verify access to https://$DOMAIN/cloud/"
+echo "Done! Please verify access to https://api.sec.lemue.org/cloud/"
