@@ -44,11 +44,12 @@ echo "Adding extra location blocks for Uptime Kuma root support..."
 
 # 1. /upload/
 PATH_LOC="/upload/"
-PROXY="http://uptime-kuma:3001/upload/"
-if docker exec $CONTAINER_NAME grep -q "location $PATH_LOC" $CONF_FILE; then
+# grep for "location /upload" matches both /upload and /upload/
+if docker exec $CONTAINER_NAME grep -q "location .*$PATH_LOC" $CONF_FILE; then
     echo "Location $PATH_LOC already exists. Skipping..."
 else
     echo "Adding location $PATH_LOC..."
+    PROXY="http://uptime-kuma:3001/upload/"
     docker exec $CONTAINER_NAME sed -i "\$i \\
   location $PATH_LOC {\\
     proxy_pass $PROXY;\\
@@ -62,11 +63,11 @@ fi
 
 # 2. /socket.io/
 PATH_LOC="/socket.io/"
-PROXY="http://uptime-kuma:3001/socket.io/"
-if docker exec $CONTAINER_NAME grep -q "location $PATH_LOC" $CONF_FILE; then
+if docker exec $CONTAINER_NAME grep -q "location .*socket.io" $CONF_FILE; then
     echo "Location $PATH_LOC already exists. Skipping..."
 else
     echo "Adding location $PATH_LOC..."
+    PROXY="http://uptime-kuma:3001/socket.io/"
     docker exec $CONTAINER_NAME sed -i "\$i \\
   location $PATH_LOC {\\
     proxy_pass $PROXY;\\
@@ -80,11 +81,11 @@ fi
 
 # 3. /api/status-page/
 PATH_LOC="/api/status-page/"
-PROXY="http://uptime-kuma:3001/api/status-page/"
-if docker exec $CONTAINER_NAME grep -q "location $PATH_LOC" $CONF_FILE; then
+if docker exec $CONTAINER_NAME grep -q "location .*$PATH_LOC" $CONF_FILE; then
     echo "Location $PATH_LOC already exists. Skipping..."
 else
     echo "Adding location $PATH_LOC..."
+    PROXY="http://uptime-kuma:3001/api/status-page/"
     docker exec $CONTAINER_NAME sed -i "\$i \\
   location $PATH_LOC {\\
     proxy_pass $PROXY;\\
@@ -98,7 +99,12 @@ fi
 
 # Check syntax
 echo "Checking Nginx configuration..."
-docker exec $CONTAINER_NAME nginx -t
+if ! docker exec $CONTAINER_NAME nginx -t; then
+    echo "ERROR: Nginx configuration test failed! Restoring backup..."
+    docker exec $CONTAINER_NAME cp $CONF_FILE.bak $CONF_FILE
+    docker exec $CONTAINER_NAME nginx -s reload
+    exit 1
+fi
 
 # Reload Nginx
 echo "Reloading Nginx..."
