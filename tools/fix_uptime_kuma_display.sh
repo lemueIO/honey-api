@@ -30,12 +30,29 @@ location ^~ /cloud/ {
     proxy_set_header Connection "upgrade";
 
     # Fix subdirectory paths and routing
-    sub_filter_types text/html;
+    # Enable filtering for JS, CSS, and JSON
+    sub_filter_types text/html text/css application/javascript application/json;
+    
+    # Base tag for HTML
     sub_filter "<head>" "<head><base href=\"/cloud/\">";
+    
+    # Fix absolute asset paths in JS/HTML
     sub_filter "=\"/assets/" "=\"/cloud/assets/";
     sub_filter "=\"/manifest.json" "=\"/cloud/manifest.json";
     sub_filter "=\"/icon.svg" "=\"/cloud/icon.svg";
     sub_filter "=\"/apple-touch-icon.png" "=\"/cloud/apple-touch-icon.png";
+    
+    # Fix JS router paths (common Kuma paths)
+    # Quotes are important to match string literals in JS
+    sub_filter "\"/dashboard\"" "\"/cloud/dashboard\"";
+    sub_filter "\"/settings\"" "\"/cloud/settings\"";
+    sub_filter "\"/monitor\"" "\"/cloud/monitor\"";
+    sub_filter "\"/maintenance\"" "\"/cloud/maintenance\"";
+    
+    # Fix API calls
+    # sub_filter "\"/api/" "\"/cloud/api/"; # This might be risky if it matches too much?
+    # Kuma often uses socket.io for most things, but some fetches might exist.
+    
     sub_filter_once off;
 }
 
