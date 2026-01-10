@@ -88,7 +88,7 @@ self_update() {
 
     TEMP_FILE=$(mktemp)
     # Use cache-buster to avoid CDN issues
-    if curl -s -f "${SCRIPT_URL}?v=$(date +%s)" -o "$TEMP_FILE"; then
+    if curl -s -f --connect-timeout 10 --retry 3 "${SCRIPT_URL}?v=$(date +%s)" -o "$TEMP_FILE"; then
         if ! bash -n "$TEMP_FILE"; then
             rm -f "$TEMP_FILE"
             return
@@ -248,7 +248,11 @@ fi
 # 1. Fetch Remote IPs
 echo -e "${BLUE}[STEP 1/3]${NC} Fetching remote ban list..."
 REMOTE_FILE=$(mktemp)
-curl -s "$FEED_URL" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'> "$REMOTE_FILE"
+if ! curl -s -f --connect-timeout 10 --retry 3 "$FEED_URL" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' > "$REMOTE_FILE"; then
+    echo -e "${RED}[ERROR]${NC} Failed to fetch feed from $FEED_URL after 3 attempts. Exiting."
+    rm -f "$REMOTE_FILE"
+    exit 1
+fi
 REMOTE_COUNT=$(wc -l < "$REMOTE_FILE")
 echo -e "${GREEN}[OK]${NC} Received ${YELLOW}$REMOTE_COUNT${NC} IPs from feed."
 
