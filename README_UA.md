@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>Високопродуктивний міст та агрегатор розвідки загроз</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v2.0.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.0.0)
+  [![Version](https://img.shields.io/badge/version-v2.1.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.1.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -42,6 +42,7 @@ Honey Cloud Intelligence — це високопродуктивний міст 
     -   **Зовнішня верифікація**: Прямі посилання на Check-Host.net та портативний скрипт для глобальних тестів підключення.
     -   **Ендпоінт здоров'я**: Виділений маршрут `/health` для моніторингу працездатності.
 -   **Сучасний інтерфейс**: Елегантна панель керування в темному режимі з живою статистикою, управлінням API ключами та контрольними списками.
+-   **Сторінка статусу**: Спрощена, публічна панель статусу (`/status`), доступна без входу.
 -   **Багатомовна підтримка**: Повна документація доступна англійською, німецькою (стандартною та спрощеною) та українською мовами.
 -   **Контейнеризація**: Створено з Docker та Docker Compose для легкого розгортання.
 

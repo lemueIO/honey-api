@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>High-Performance Threat Intelligence Bridge & Aggregator</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v2.0.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.0.0)
+  [![Version](https://img.shields.io/badge/version-v2.1.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.1.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -42,6 +42,7 @@ Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge design
     -   **External verification**: Direct links to Check-Host.net and a portable check script for global connectivity tests.
     -   **Health Endpoint**: Dedicated `/health` route for uptime monitoring.
 -   **Modern UI**: Sleek dark-mode dashboard with real-time statistics, API key management, and list control.
+-   **Status Page**: A simplified, public status dashboard available without login.
 -   **Multi-language Support**: Full documentation available in English, German (Standard & Simple), and Ukrainian.
 -   **Containerized**: Built with Docker and Docker Compose for easy deployment.
 

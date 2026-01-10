@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-01-10
+
+### Added
+- **Status Page**: New public status page available at `/status` (and `https://api.sec.lemue.org/status`) to view system health and threat statistics without authentication.
+- **API Endpoint**: Public statistics endpoint `/api/public/stats` to power the status page.
+
+### Changed
+- **Versioning**: Minor version bump to v2.1.0.
+
 ## [2.0.0] - 2026-01-09
 
 ### Added
