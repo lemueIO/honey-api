@@ -8,10 +8,13 @@ DOMAIN="api.sec.lemue.org"
 echo "Searching for Nginx config for $DOMAIN in container $CONTAINER_NAME..."
 
 # Find the config file inside the container
-CONF_FILE=$(docker exec $CONTAINER_NAME grep -l "server_name .*$DOMAIN" /data/nginx/proxy_host/*.conf | head -n 1)
+# We use sh -c to ensure the glob expansion happens inside the container
+CONF_FILE=$(docker exec $CONTAINER_NAME sh -c "grep -l 'server_name .*$DOMAIN' /data/nginx/proxy_host/*.conf" | head -n 1)
 
 if [ -z "$CONF_FILE" ]; then
-  echo "Error: Configuration file for $DOMAIN not found."
+  # Try checking just the directory listing to debug if needed
+  # docker exec $CONTAINER_NAME ls -la /data/nginx/proxy_host/
+  echo "Error: Configuration file for $DOMAIN not found. (Glob expansion failed to match)"
   exit 1
 fi
 
