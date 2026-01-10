@@ -80,15 +80,16 @@
             background-color: #161b22 !important;
             border-bottom: 1px solid #30363d;
         }
-        
+
         /* Main Content Centering */
         .main-content {
             flex: 1;
             display: flex;
-            align-items: center; /* Vertical Center */
+            align-items: center;
+            /* Vertical Center */
             justify-content: center;
         }
-        
+
         .content-wrapper {
             width: 100%;
         }
@@ -99,26 +100,27 @@
     <!-- Header -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="/static/logo_bear.png?v=2" alt="Logo" width="30" height="30"
-                    class="d-inline-block align-text-top me-2">
+            <a class="navbar-brand" href="/status">
+                <img src="/static/logo_bear.png?v=5" alt="Logo" width="30" height="30"
+                    class="d-inline-block align-text-top me-2" style="max-width: 100%; height: auto;">
                 <i class="bi bi-shield-check"></i> Honey Cloud Intelligence
             </a>
-            
+
             <!-- Right Side Menu (From Login Page) -->
             <div class="ms-auto d-flex align-items-center">
-                <a href="https://github.com/lemueIO/honey-api" class="text-decoration-none me-3" target="_blank" title="GitHub">
+                <a href="https://github.com/lemueIO/honey-api" class="text-decoration-none me-3" target="_blank"
+                    title="GitHub">
                     <i class="bi bi-github fs-5 text-light"></i>
                 </a>
                 <a href="https://feed.sec.lemue.org/" class="text-decoration-none me-3" target="_blank" title="Feed">
                     <i class="bi bi-rss-fill fs-5" style="color: #238636;"></i>
                 </a>
-                <a href="https://feed.sec.lemue.org/feed/banned_ips.txt" class="text-decoration-none me-3" target="_blank"
-                    title="Banned IPs">
+                <a href="https://feed.sec.lemue.org/feed/banned_ips.txt" class="text-decoration-none me-3"
+                    target="_blank" title="Banned IPs">
                     <i class="bi bi-file-earmark-text-fill fs-5" style="color: #238636;"></i>
                 </a>
                 <a href="https://lemue.org/" class="text-decoration-none" target="_blank" title="lemue.org">
-                    <img src="/static/favicon-lemue.ico?v=3" alt="Lemue" width="24" height="24" class="rounded-circle"
+                    <img src="/static/favicon-lemue.ico?v=5" alt="Lemue" width="24" height="24" class="rounded-circle"
                         style="object-fit: cover;">
                 </a>
             </div>
@@ -227,7 +229,7 @@
             // The prompt asks for this page "without login".
             // So I MUST add a public stats endpoint or use the same data passed on load and then refresh from a new public endpoint.
             // I will assume for now I will add a public endpoint in main.py, e.g. /api/public/stats
-            
+
             fetch('/api/public/stats')
                 .then(response => {
                     if (!response.ok) {
@@ -260,11 +262,11 @@
 
                     if (apiDot && apiText) {
                         if (data.api_up) {
-                            apiDot.style.backgroundColor = '#238636'; 
+                            apiDot.style.backgroundColor = '#238636';
                             apiText.innerText = 'Online';
                             apiText.style.color = '#238636';
                         } else {
-                            apiDot.style.backgroundColor = '#da3633'; 
+                            apiDot.style.backgroundColor = '#da3633';
                             apiText.innerText = 'Offline';
                             apiText.style.color = '#da3633';
                         }
@@ -296,7 +298,7 @@
             initVal('stats-osint', 'osint');
             initVal('stats-blacklist', 'blacklist');
             initVal('stats-whitelist', 'whitelist');
-            
+
             // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
             // Actually I should pass them in template context in main.py too.
             updateStats();
