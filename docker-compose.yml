@@ -13,6 +13,9 @@ services:
       - redis
     volumes:
       - ./app:/app/app
+    networks:
+      - default
+      - nginx-pm_default
 
   uptime-kuma:
     image: louislam/uptime-kuma:1
