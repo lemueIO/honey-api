@@ -401,6 +401,75 @@ async def get_stats(user: str = Depends(get_current_user)):
         "last_cloud_count": int(cloud_new_24h)
     }
 
+# --- Public Status Routes ---
+
+@app.get("/status", response_class=HTMLResponse)
+async def status_page(request: Request):
+    # Stats (Optimized)
+    local_ips = int(REDIS_CLIENT.get(KEY_STATS_LOCAL) or 0)
+    osint_ips = int(REDIS_CLIENT.get(KEY_STATS_OSINT) or 0)
+    blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
+    whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
+    
+    return templates.TemplateResponse("status.html", {
+        "request": request,
+        "stats": {
+            "local": local_ips,
+            "osint": osint_ips,
+            "blacklist": blacklist_count,
+            "whitelist": whitelist_count
+        }
+    })
+
+@app.get("/api/public/stats")
+async def get_public_stats():
+    local_ips = int(REDIS_CLIENT.get(KEY_STATS_LOCAL) or 0)
+    osint_ips = int(REDIS_CLIENT.get(KEY_STATS_OSINT) or 0)
+    blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
+    whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
+    
+    # Check External API Status (Publicly exposed on status page)
+    api_up = False
+    
+    # 1. Socket Check - Public (Port 443)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2)
+        result = s.connect_ex(("api.sec.lemue.org", 443))
+        if result == 0:
+            api_up = True
+        s.close()
+    except Exception:
+        pass
+        
+    # 2. Socket Check - Localhost (Port 8080) - Fallback
+    if not api_up:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1)
+            result = s.connect_ex(("127.0.0.1", 8080))
+            if result == 0:
+                api_up = True
+            s.close()
+        except Exception:
+            pass
+        
+    last_osint_count = REDIS_CLIENT.get("stats:last_osint_count")
+    if last_osint_count is None: last_osint_count = 0
+    
+    cloud_new_24h = REDIS_CLIENT.get("stats:cloud_new_24h")
+    if cloud_new_24h is None: cloud_new_24h = 0
+
+    return {
+        "local": local_ips,
+        "osint": osint_ips,
+        "blacklist": blacklist_count,
+        "whitelist": whitelist_count,
+        "api_up": api_up,
+        "last_osint_count": int(last_osint_count),
+        "last_cloud_count": int(cloud_new_24h)
+    }
+
 @app.post("/api-key/generate")
 async def generate_key(name: str = Form(...), user: str = Depends(get_current_user)):
     if not user: return RedirectResponse(url="/login")

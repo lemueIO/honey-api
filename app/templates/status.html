@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honey Cloud Intelligence - Status</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png?v=2">
+    <link rel="shortcut icon" href="/static/favicon.ico?v=2">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            box-shadow: none;
+        }
+
+        .card:hover {
+            border-color: #8b949e;
+        }
+
+        .stat-card {
+            color: #fff;
+        }
+
+        .bg-local {
+            background: linear-gradient(135deg, #1f6feb, #238636);
+        }
+
+        .bg-osint {
+            background: linear-gradient(135deg, #238636, #2ea043);
+        }
+
+        .bg-blacklist {
+            background: linear-gradient(135deg, #da3633, #b62324);
+        }
+
+        .bg-whitelist {
+            background: linear-gradient(135deg, #d29922, #9e6a03);
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(1);
+                border-color: #30363d;
+            }
+
+            50% {
+                transform: scale(1.02);
+                border-color: #ff4444;
+                box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            }
+
+            100% {
+                transform: scale(1);
+                border-color: #30363d;
+            }
+        }
+
+        .pulse {
+            animation: pulse-animation 2s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Navbar tweaks */
+        .navbar {
+            background-color: #161b22 !important;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        /* Main Content Centering */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center; /* Vertical Center */
+            justify-content: center;
+        }
+        
+        .content-wrapper {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="/static/logo_bear.png?v=2" alt="Logo" width="30" height="30"
+                    class="d-inline-block align-text-top me-2">
+                <i class="bi bi-shield-check"></i> Honey Cloud Intelligence
+            </a>
+            
+            <!-- Right Side Menu (From Login Page) -->
+            <div class="ms-auto d-flex align-items-center">
+                <a href="https://github.com/lemueIO/honey-api" class="text-decoration-none me-3" target="_blank" title="GitHub">
+                    <i class="bi bi-github fs-5 text-light"></i>
+                </a>
+                <a href="https://feed.sec.lemue.org/" class="text-decoration-none me-3" target="_blank" title="Feed">
+                    <i class="bi bi-rss-fill fs-5" style="color: #238636;"></i>
+                </a>
+                <a href="https://feed.sec.lemue.org/feed/banned_ips.txt" class="text-decoration-none me-3" target="_blank"
+                    title="Banned IPs">
+                    <i class="bi bi-file-earmark-text-fill fs-5" style="color: #238636;"></i>
+                </a>
+                <a href="https://lemue.org/" class="text-decoration-none" target="_blank" title="lemue.org">
+                    <img src="/static/favicon-lemue.ico?v=3" alt="Lemue" width="24" height="24" class="rounded-circle"
+                        style="object-fit: cover;">
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content (Vertically Centered) -->
+    <div class="main-content">
+        <div class="container content-wrapper">
+            <!-- Stats Row -->
+            <div class="row g-4 mb-5 text-center">
+                <div class="col-md-3">
+                    <div class="card stat-card bg-local h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Honey Cloud Intelligence IPs</h5>
+                            <p class="display-6 fw-bold mb-0" id="stats-local">{{ stats.local }}</p>
+                            <small>Last 365 Days</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card bg-osint h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">OSINT IPs</h5>
+                            <p class="display-6 fw-bold mb-0" id="stats-osint">{{ stats.osint }}</p>
+                            <small>Last 90 Days</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card bg-blacklist h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Blacklist</h5>
+                            <p class="display-6 fw-bold mb-0" id="stats-blacklist">{{ stats.blacklist }}</p>
+                            <small>Permanent</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card bg-whitelist h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Whitelist</h5>
+                            <p class="display-6 fw-bold mb-0" id="stats-whitelist">{{ stats.whitelist }}</p>
+                            <small>Permanent</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status Row -->
+            <div class="row mb-5 text-center justify-content-center">
+                <div class="col-md-6">
+                    <div class="card p-2" style="background-color: #0d1117; border: 1px solid #30363d;">
+                        <div class="d-flex justify-content-around align-items-center text-muted small">
+                            <div>
+                                API Status:
+                                <span id="api-status-dot"
+                                    style="height: 10px; width: 10px; background-color: grey; border-radius: 50%; display: inline-block; margin-left: 5px;"></span>
+                                <span id="api-status-text">Checking...</span>
+                                <small class="ms-2">
+                                    <a href="https://check-host.net/check-http?host=https://api.sec.lemue.org/"
+                                        target="_blank" class="text-decoration-none text-muted">
+                                        <i class="bi bi-box-arrow-up-right"></i> Check External
+                                    </a>
+                                </small>
+                            </div>
+                            <div>
+                                Last Cloud (24h): <span id="stats-last-cloud" class="fw-bold text-light">-</span> IPs
+                            </div>
+                            <div>
+                                Last OSINT: <span id="stats-last-osint" class="fw-bold text-light">-</span> IPs
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Stats Refresh Logic. Keep track of previous values to animate only on change.
+        const previousStats = {
+            local: null,
+            osint: null,
+            blacklist: null,
+            whitelist: null
+        };
+
+        function animateElement(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const card = element.closest('.card');
+                if (card) {
+                    card.classList.remove('pulse');
+                    void card.offsetWidth; // trigger reflow
+                    card.classList.add('pulse');
+                }
+            }
+        }
+
+        function updateStats() {
+            // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
+            // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
+            // I need to create a PUBLIC stats endpoint or modify /api/stats to be optional auth?
+            // The prompt asks for this page "without login".
+            // So I MUST add a public stats endpoint or use the same data passed on load and then refresh from a new public endpoint.
+            // I will assume for now I will add a public endpoint in main.py, e.g. /api/public/stats
+            
+            fetch('/api/public/stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const updateField = (id, key) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            const newValue = data[key];
+                            if (previousStats[key] !== null && previousStats[key] !== newValue) {
+                                animateElement(id);
+                            }
+                            el.innerText = newValue;
+                            previousStats[key] = newValue;
+                        }
+                    };
+
+                    updateField('stats-local', 'local');
+                    updateField('stats-osint', 'osint');
+                    updateField('stats-blacklist', 'blacklist');
+                    updateField('stats-whitelist', 'whitelist');
+
+                    const apiDot = document.getElementById('api-status-dot');
+                    const apiText = document.getElementById('api-status-text');
+                    const lastCloud = document.getElementById('stats-last-cloud');
+                    const lastOsint = document.getElementById('stats-last-osint');
+
+                    if (apiDot && apiText) {
+                        if (data.api_up) {
+                            apiDot.style.backgroundColor = '#238636'; 
+                            apiText.innerText = 'Online';
+                            apiText.style.color = '#238636';
+                        } else {
+                            apiDot.style.backgroundColor = '#da3633'; 
+                            apiText.innerText = 'Offline';
+                            apiText.style.color = '#da3633';
+                        }
+                    }
+
+                    if (lastCloud) {
+                        const val = data.last_cloud_count || 0;
+                        const sign = val >= 0 ? '+' : '';
+                        lastCloud.innerText = `${sign}${val}`;
+                    }
+                    if (lastOsint) {
+                        const val = data.last_osint_count || 0;
+                        const sign = val >= 0 ? '+' : '';
+                        lastOsint.innerText = `${sign}${val}`;
+                    }
+                })
+                .catch(error => console.error('Error fetching stats:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const initVal = (id, key) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const val = parseInt(el.innerText.replace(/,/g, ''));
+                    previousStats[key] = isNaN(val) ? 0 : val;
+                }
+            };
+            initVal('stats-local', 'local');
+            initVal('stats-osint', 'osint');
+            initVal('stats-blacklist', 'blacklist');
+            initVal('stats-whitelist', 'whitelist');
+            
+            // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
+            // Actually I should pass them in template context in main.py too.
+            updateStats();
+        });
+
+        setInterval(updateStats, 10000);
+    </script>
+</body>
+
+</html>
