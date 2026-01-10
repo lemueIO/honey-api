@@ -42,16 +42,16 @@ location ^~ /cloud/ {
     sub_filter "=\"/icon.svg" "=\"/cloud/icon.svg";
     sub_filter "=\"/apple-touch-icon.png" "=\"/cloud/apple-touch-icon.png";
     
-    # Fix JS router paths (common Kuma paths)
-    # Quotes are important to match string literals in JS
-    sub_filter "\"/dashboard\"" "\"/cloud/dashboard\"";
-    sub_filter "\"/settings\"" "\"/cloud/settings\"";
-    sub_filter "\"/monitor\"" "\"/cloud/monitor\"";
-    sub_filter "\"/maintenance\"" "\"/cloud/maintenance\"";
+    # Fix Vue Router Base Path
+    # This patches the history initialization to use /cloud/ as the base
+    # "history:ZG()" matches the minified code for this version
+    sub_filter "history:ZG()" "history:ZG(\"/cloud/\")";
     
-    # Fix API calls
-    # sub_filter "\"/api/" "\"/cloud/api/"; # This might be risky if it matches too much?
-    # Kuma often uses socket.io for most things, but some fetches might exist.
+    # Remove previous route-specific hacks (they would cause double prefixing)
+    # sub_filter "\"/dashboard\"" ... (REMOVED)
+    
+    # Fix API calls or other absolute paths if necessary
+    # sub_filter "\"/api/\"" "\"/cloud/api/\"";
     
     sub_filter_once off;
 }
