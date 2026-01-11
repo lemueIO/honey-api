@@ -165,7 +165,6 @@ def format_threatbook_v3(ip: str, severity: str, judgments: List[str]):
 async def fetch_osint_feeds():
     while True:
         try:
-            log_logo()
             logger.info(f"{C_CYAN}[FETCH:OSINT] Starting OSINT feed update cycle...{C_RESET}")
             count = 0 
             
@@ -279,6 +278,13 @@ async def startup_event():
     
     asyncio.create_task(fetch_osint_feeds())
     asyncio.create_task(periodic_db_cleanup())
+    asyncio.create_task(periodic_logo_display())
+
+async def periodic_logo_display():
+    """Displays the logo every 12 hours."""
+    while True:
+        await asyncio.sleep(12 * 3600)
+        log_logo()
 
 async def load_blacklist_from_file():
     """Reads scan-blacklist.conf and populates REDIS_CLIENT's blacklist."""
@@ -311,7 +317,6 @@ async def periodic_db_cleanup():
     """Runs database cleanup tasks periodically."""
     while True:
         try:
-            log_logo()
             logger.info(f"{C_CYAN}[CLEAN:DB] Starting periodic database cleanup...{C_RESET}")
             
             # 1. Reload blacklist from file
