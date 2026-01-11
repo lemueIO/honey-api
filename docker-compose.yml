@@ -13,6 +13,7 @@ services:
       - redis
     volumes:
       - ./app:/app/app
+      - ./scan-blacklist.conf:/app/scan-blacklist.conf
     networks:
       - default
       - nginx-pm_default
