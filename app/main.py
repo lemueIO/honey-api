@@ -84,22 +84,22 @@ def get_current_user(request: Request):
 
 # --- Logic ---
 
-def is_ip_in_cidr_list(ip: str, redis_key: str) -> bool:
+def is_ip_in_cidr_list(ip: str, blacklist_members: set) -> bool:
     """
-    Check if an IP is in a Redis set, handling both exact matches and CIDR ranges.
+    Check if an IP is in a provided set of members (exact match or CIDR).
+    Optimized to avoid repeated Redis calls.
     """
-    # 1. Try exact match first (O(1) in Redis)
-    if REDIS_CLIENT.sismember(redis_key, ip):
+    # 1. Try exact match first
+    if ip in blacklist_members:
         return True
     
-    # 2. If not found, iterate through all members to check for CIDR ranges
-    members = REDIS_CLIENT.smembers(redis_key)
+    # 2. Iterate through all members to check for CIDR ranges
     try:
         target_ip = ipaddress.ip_address(ip)
     except ValueError:
         return False # Invalid IP input
 
-    for member in members:
+    for member in blacklist_members:
         try:
             # Check if member is a CIDR range (e.g., "10.0.0.0/24")
             if "/" in member:
@@ -112,12 +112,13 @@ def is_ip_in_cidr_list(ip: str, redis_key: str) -> bool:
     return False
 
 def get_ip_reputation(ip: str):
+    blacklist_members = REDIS_CLIENT.smembers(KEY_BLACKLIST)
     # 1. Whitelist
-    if is_ip_in_cidr_list(ip, KEY_WHITELIST):
+    if is_ip_in_cidr_list(ip, REDIS_CLIENT.smembers(KEY_WHITELIST)):
         return "clean", ["whitelist"]
     
     # 2. Blacklist
-    if is_ip_in_cidr_list(ip, KEY_BLACKLIST):
+    if is_ip_in_cidr_list(ip, blacklist_members):
         return "high", ["permanent blacklist"]
     
     # 3. Local Data
@@ -291,7 +292,7 @@ async def periodic_db_cleanup():
     """Runs database cleanup tasks periodically."""
     while True:
         try:
-            logger.info("🧹 Starting periodic database cleanup...")
+            logger.info("🧼 [CLEAN:DB] Starting periodic database cleanup...")
             
             # 1. Reload blacklist from file
             await load_blacklist_from_file()
@@ -299,36 +300,51 @@ async def periodic_db_cleanup():
             # 2. Purge test IP
             purge_test_ip()
             
-            # 3. Purge blacklisted IPs from DB
-            # This is a bit resource intensive if the DB is huge, but with Redis SCAN it should be manageable.
-            
-            # Cleanup ti:local:*
-            cursor = '0'
-            while cursor != 0:
-                cursor, keys = REDIS_CLIENT.scan(cursor=cursor, match=f"{KEY_LOCAL}*", count=1000)
-                for key in keys:
-                    ip = key.replace(KEY_LOCAL, "")
-                    if is_ip_in_cidr_list(ip, KEY_BLACKLIST):
-                        logger.info(f"Removing blacklisted local IP: {ip}")
-                        REDIS_CLIENT.delete(key)
-                        REDIS_CLIENT.decr(KEY_STATS_LOCAL)
-            
-            # Cleanup ti:osint:*
-            cursor = '0'
-            while cursor != 0:
-                cursor, keys = REDIS_CLIENT.scan(cursor=cursor, match=f"{KEY_OSINT}*", count=1000)
-                for key in keys:
-                    ip = key.replace(KEY_OSINT, "")
-                    if is_ip_in_cidr_list(ip, KEY_BLACKLIST):
-                        logger.info(f"Removing blacklisted OSINT IP: {ip}")
-                        REDIS_CLIENT.delete(key)
-                        REDIS_CLIENT.decr(KEY_STATS_OSINT)
+            # 3. Fetch blacklist once for optimization
+            blacklist_members = REDIS_CLIENT.smembers(KEY_BLACKLIST)
+            if not blacklist_members:
+                logger.info("ℹ️ [CLEAN:DB] Blacklist is empty, skipping IP scan.")
+            else:
+                # 4. Purge blacklisted IPs from DB
+                removed_local = 0
+                removed_osint = 0
+                total_scanned = 0
 
-            logger.info("✅ Periodic database cleanup finished.")
+                # Cleanup ti:local:*
+                cursor = 0
+                while True:
+                    cursor, keys = REDIS_CLIENT.scan(cursor=cursor, match=f"{KEY_LOCAL}*", count=1000)
+                    total_scanned += len(keys)
+                    for key in keys:
+                        ip = key.replace(KEY_LOCAL, "")
+                        if is_ip_in_cidr_list(ip, blacklist_members):
+                            logger.info(f"🗑️ [CLEAN:DB] Removing blacklisted local IP: {ip}")
+                            REDIS_CLIENT.delete(key)
+                            REDIS_CLIENT.decr(KEY_STATS_LOCAL)
+                            removed_local += 1
+                    if str(cursor) == '0':
+                        break
+                
+                # Cleanup ti:osint:*
+                cursor = 0
+                while True:
+                    cursor, keys = REDIS_CLIENT.scan(cursor=cursor, match=f"{KEY_OSINT}*", count=1000)
+                    total_scanned += len(keys)
+                    for key in keys:
+                        ip = key.replace(KEY_OSINT, "")
+                        if is_ip_in_cidr_list(ip, blacklist_members):
+                            logger.info(f"🗑️ [CLEAN:DB] Removing blacklisted OSINT IP: {ip}")
+                            REDIS_CLIENT.delete(key)
+                            REDIS_CLIENT.decr(KEY_STATS_OSINT)
+                            removed_osint += 1
+                    if str(cursor) == '0':
+                        break
+
+                logger.info(f"✨ [CLEAN:DB] Database cleanup finished. Scanned {total_scanned} keys, removed {removed_local} local, {removed_osint} osint IPs.")
         except Exception as e:
-            logger.error(f"❌ Error during periodic cleanup: {e}")
+            logger.error(f"❌ [CLEAN:DB] Error during periodic cleanup: {e}")
         
-        await asyncio.sleep(12 * 3600) # Every 12 hours
+        await asyncio.sleep(3600) # Every 1 hour
 
 # --- API Routes ---
 
