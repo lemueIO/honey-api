@@ -30,9 +30,11 @@
 Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge designed to aggregate, manage, and serve threat data from local HFish honeypots and global OSINT sources. It emulates the **ThreatBook v3 API**, allowing for seamless integration into existing security tools without hitting external rate limits.
 
 <div align="center">
-  <img src="assets/dashboard_preview.png" width="80%" alt="Dashboard Preview">
+  <a href="https://api.sec.lemue.org/status">
+    <img src="assets/dashboard_preview.png" width="80%" alt="Dashboard Preview">
+  </a>
   <br>
-  <em>Honey Cloud Intelligence Dashboard with Dark Mode and IP Statistics</em>
+  <em>Honey Cloud Intelligence Status Dashboard - <a href="https://api.sec.lemue.org/status">Live View</a></em>
 </div>
 
 ## [🚀](#features) Features

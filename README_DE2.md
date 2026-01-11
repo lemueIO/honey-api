@@ -29,9 +29,11 @@
 Honey Cloud Intelligence ist ein Programm für Sicherheit. Es sammelt Daten über Gefahren aus dem Internet. Es holt Daten von eigenen Fallen (Honeypots) und von vielen öffentlichen Listen (über 10 Quellen). Es verhält sich wie die **ThreatBook v3 API**. Das bedeutet, man kann es einfach mit anderen Programmen benutzen. Es ist sehr schnell.
 
 <div align="center">
-  <img src="assets/dashboard_preview.png" width="80%" alt="Dashboard Vorschau">
+  <a href="https://api.sec.lemue.org/status">
+    <img src="assets/dashboard_preview.png" width="80%" alt="Dashboard Vorschau">
+  </a>
   <br>
-  <em>Das Dashboard zeigt Statistiken und ist dunkel gestaltet.</em>
+  <em>Honey Cloud Intelligence Status Dashboard - <a href="https://api.sec.lemue.org/status">Live Ansicht</a></em>
 </div>
 
 ## [🚀](#was-kann-das-programm) Was kann das Programm?
