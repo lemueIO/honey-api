@@ -70,7 +70,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 def log_logo():
-    logo_path = "/app/hsec_ascii.logo"
+    # Attempt to find logo in current directory or app directory
+    logo_path = os.path.join(os.path.dirname(__file__), "hsec_ascii.logo")
     if os.path.exists(logo_path):
         with open(logo_path, "r") as f:
             print(f"{C_YELLOW}{f.read()}{C_RESET}")
@@ -231,10 +232,7 @@ async def fetch_osint_feeds():
             # 8. DShield
             count += process_text_feed("https://feeds.dshield.org/block.txt")
 
-            # 9. DigitalSide
-            count += process_text_feed("https://osint.digitalside.it/Threat-Intel/lists/latestips.txt")
-
-            # 10. ThreatFox (CSV parsing)
+            # 9. ThreatFox (CSV parsing)
             new_threatfox = 0
             try:
                 r = requests.get("https://threatfox.abuse.ch/export/csv/ip-port/recent/", timeout=15)
