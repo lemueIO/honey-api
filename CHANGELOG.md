@@ -5,10 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [2.2.0] - 2026-01-11
 
 ### Added
+- **Visuals**: Integrated yellow ASCII logo into the logging system (startup and 12h interval).
 - **Documentation**: Added repository status badges (Repo Size, License, Last Commit, Open Issues) to READMEs.
 - **Security**: Added `.gitaccounts` to `.gitignore` to prevent sensitive data leakage.
 
 ### Changed
+- **Optimization**: Significant performance improvement in database cleanup via pre-fetched blacklist scanning and optimized IP matching logic.
+- **Logging**: Complete overhaul of the logging system. Replaced emojis with color-coded ANSI tags (`[SYSTEM]`, `[CLEAN:DB]`, `[FETCH:OSINT]`, etc.) for better readability in Docker logs.
+- **Maintenance**: Removed failing DigitalSide OSINT source to ensure stability of the feed update cycle.
+- **Cleanup**: Reduced database cleanup interval to 1 hour.
 - **Versioning**: Minor version bump to v2.2.0.
 
 ## [2.1.0] - 2026-01-10

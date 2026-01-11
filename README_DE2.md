@@ -39,9 +39,12 @@ Honey Cloud Intelligence ist ein Programm für Sicherheit. Es sammelt Daten übe
 -   **Daten sammeln**: Es nimmt Daten von innen und außen (Echtzeit + OSINT).
 -   **Schnelligkeit**: Es benutzt Redis. Das macht es sehr schnell.
 -   **Kompatibilität**: Es spricht die gleiche Sprache wie ThreatBook v3.
--   **Filtern**:
+-   **Filtern & Aufräumen**:
     -   **Listen**: Man kann erlaubte und verbotene Adressen eintragen (auch ganze Bereiche wie `10.0.0.0/24`).
-    -   **Wichtigkeit**: Eigene Daten sind wichtiger als fremde Daten.
+    -   **Sauberes System**: Das Programm löscht verbotene Adressen automatisch und sehr schnell aus dem Speicher.
+-   **Besseres Logbuch (Logging)**:
+    -   **Farben & Ordnung**: Das Logbuch ist jetzt farbig und sehr übersichtlich. Man sieht sofort, was das Programm gerade macht.
+    -   **Logo**: Ein schönes gelbes Logo erscheint beim Start und alle 12 Stunden.
 -   **Überwachung**:
     -   **Konnektivität**: Es prüft automatisch, ob es von außen erreichbar ist (vermeidet Fehler).
     -   **Hilfen**: Es gibt Links und Skripte, um die Verbindung weltweit zu testen.

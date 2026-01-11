@@ -39,9 +39,12 @@ Honey Cloud Intelligence ist eine hochperformante Threat Intelligence Bridge, di
 -   **Bedrohungsdatenerfassung**: Kombiniert Echtzeitdaten von lokalen Honeypots (via HFish) mit über 10 externen OSINT-Feeds.
 -   **Hohe Performance**: Basiert auf FastAPI und Redis für Antworten im Sub-Millisekunden-Bereich.
 -   **API-Emulation**: Vollständig kompatibel mit dem **ThreatBook v3 API**-Standard.
--   **Intelligente Filterung**:
+-   **Intelligente Filterung & Bereinigung**:
     -   **Whitelist/Blacklist**: Unterstützt exakte IP-Übereinstimmungen und CIDR-Bereiche (z. B. `10.0.0.0/24`).
-    -   **Priorisierung**: Benutzerdefinierte Logik zur Priorisierung lokaler Bedrohungen und manueller Listen gegenüber OSINT-Daten.
+    -   **Hochperformante Bereinigung**: Optimierte Datenbankbereinigung durch pre-fetched Blacklist-Scanning und effiziente Redis-SCAN-Operationen.
+-   **Erweitertes Logging**:
+    -   **Strukturiertes Logging**: Komplett überarbeitetes System mit farbcodierten ANSI-Tags (`[SYSTEM]`, `[CLEAN:DB]`, `[FETCH:OSINT]`) für maximale Übersicht.
+    -   **Visuelles Feedback**: Integriertes gelbes ASCII-Logo beim Start und in periodischen 12h-Intervallen.
 -   **Robustes Monitoring**:
     -   **Resiliente Prüfung**: Integrierte Socket-Prüfung (Ports 443, 8080), die HTTP-Deadlocks vermeidet.
     -   **Externe Verifizierung**: Direkte Links zu Check-Host.net und ein portables Skript für globale Konnektivitätstests.
