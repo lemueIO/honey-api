@@ -31,7 +31,7 @@ Honey Cloud Intelligence — це високопродуктивний міст 
 
 <div align="center">
   <a href="https://api.sec.lemue.org/status">
-    <img src="assets/dashboard_preview.png" width="80%" alt="Перегляд панелі керування">
+    <img src="assets/status_preview_v220.png" width="80%" alt="Перегляд панелі керування">
   </a>
   <br>
   <em>Панель статусу Honey Cloud Intelligence - <a href="https://api.sec.lemue.org/status">Перегляд наживо</a></em>
