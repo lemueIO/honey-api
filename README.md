@@ -10,6 +10,11 @@
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
   [![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge&logo=activity&logoColor=white)](https://github.com/lemueIO/honey-api)
+  <br>
+  [![Repo Size](https://img.shields.io/github/repo-size/lemueIO/honey-api?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lemueIO/honey-api)
+  [![License](https://img.shields.io/github/license/lemueIO/honey-api?style=for-the-badge&logo=github&logoColor=white)](LICENSE)
+  [![Last Commit](https://img.shields.io/github/last-commit/lemueIO/honey-api?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lemueIO/honey-api/commits/main)
+  [![Open Issues](https://img.shields.io/github/issues/lemueIO/honey-api?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lemueIO/honey-api/issues)
 </div>
 
 <div align="center">
