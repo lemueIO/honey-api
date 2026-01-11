@@ -70,7 +70,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 def log_logo():
-    logo_path = "hsec_ascii.logo"
+    logo_path = "/app/hsec_ascii.logo"
     if os.path.exists(logo_path):
         with open(logo_path, "r") as f:
             print(f"{C_YELLOW}{f.read()}{C_RESET}")
