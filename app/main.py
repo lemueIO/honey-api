@@ -58,8 +58,24 @@ async def upload_bridge(path: str):
     return RedirectResponse(url=f"/cloud/upload/{path}")
 
 
-logging.basicConfig(level=logging.INFO)
+# --- Logging Colors ---
+C_YELLOW = "\033[93m"
+C_GREEN = "\033[92m"
+C_RED = "\033[91m"
+C_BLUE = "\033[94m"
+C_CYAN = "\033[96m"
+C_RESET = "\033[0m"
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+def log_logo():
+    logo_path = "hsec_ascii.logo"
+    if os.path.exists(logo_path):
+        with open(logo_path, "r") as f:
+            print(f"{C_YELLOW}{f.read()}{C_RESET}")
+    else:
+        logger.warning(f"{C_RED}[SYSTEM] Logo file {logo_path} not found{C_RESET}")
 
 # --- Models ---
 class HFishWebhook(BaseModel):
@@ -145,15 +161,16 @@ def format_threatbook_v3(ip: str, severity: str, judgments: List[str]):
     }
 
 # --- Background Task: OSINT Feeds ---
-
 async def fetch_osint_feeds():
     while True:
         try:
-            logger.info("Fetching OSINT feeds...")
+            log_logo()
+            logger.info(f"{C_CYAN}[FETCH:OSINT] Starting OSINT feed update cycle...{C_RESET}")
             count = 0 
             
             def process_text_feed(url, timeout=10):
                 local_count = 0
+                logger.info(f"{C_BLUE}[FETCH:OSINT] Processing feed: {url}{C_RESET}")
                 try:
                     r = requests.get(url, timeout=timeout, headers={"User-Agent": "Honey-API-Bridge/1.0"})
                     if r.status_code == 200:
@@ -168,8 +185,10 @@ async def fetch_osint_feeds():
                                     if not REDIS_CLIENT.exists(key):
                                         local_count += 1
                                     REDIS_CLIENT.setex(key, timedelta(days=90), datetime.now().isoformat())
+                    else:
+                        logger.warning(f"{C_RED}[FETCH:OSINT] Failed to fetch {url} - Status: {r.status_code}{C_RESET}")
                 except Exception as ex:
-                    logger.error(f"❌ Error fetching {url}: {ex}")
+                    logger.error(f"{C_RED}[FETCH:OSINT] Error fetching {url}: {ex}{C_RESET}")
                 return local_count
 
             # 1. Feodo Tracker
@@ -239,22 +258,24 @@ async def fetch_osint_feeds():
             # Update stats
             REDIS_CLIENT.set("stats:last_osint_count", count)
             REDIS_CLIENT.incrby(KEY_STATS_OSINT, count)
-            logger.info(f"✅ OSINT feeds updated. Added {count} new IPs.")
+            logger.info(f"{C_GREEN}[FETCH:OSINT] Feeds updated. Added {count} new IPs.{C_RESET}")
         except Exception as e:
-            logger.error(f"❌ Error fetching OSINT: {e}")
+            logger.error(f"{C_RED}[FETCH:OSINT] Critical error fetching OSINT: {e}{C_RESET}")
         
         await asyncio.sleep(24 * 3600) # Every 24 hours
 
 @app.on_event("startup")
 async def startup_event():
+    log_logo()
+    logger.info(f"{C_YELLOW}[SYSTEM] Starting application...{C_RESET}")
     # Initialize optimized counters if they don't exist
     if not REDIS_CLIENT.exists(KEY_STATS_LOCAL):
-        logger.info("Initializing stats:total_local counter...")
+        logger.info(f"{C_BLUE}[SYSTEM] Initializing stats:total_local counter...{C_RESET}")
         local_count = len(REDIS_CLIENT.keys(f"{KEY_LOCAL}*"))
         REDIS_CLIENT.set(KEY_STATS_LOCAL, local_count)
         
     if not REDIS_CLIENT.exists(KEY_STATS_OSINT):
-        logger.info("Initializing stats:total_osint counter...")
+        logger.info(f"{C_BLUE}[SYSTEM] Initializing stats:total_osint counter...{C_RESET}")
         osint_count = len(REDIS_CLIENT.keys(f"{KEY_OSINT}*"))
         REDIS_CLIENT.set(KEY_STATS_OSINT, osint_count)
     
@@ -271,16 +292,16 @@ async def load_blacklist_from_file():
                     line = line.strip()
                     if line and not line.startswith("#"):
                         REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
-            logger.info(f"✅ Loaded blacklist from {conf_path}")
+            logger.info(f"{C_GREEN}[BLACKLIST] Loaded from {conf_path}{C_RESET}")
         except Exception as e:
-            logger.error(f"❌ Error loading blacklist file: {e}")
+            logger.error(f"{C_RED}[BLACKLIST] Error loading {conf_path}: {e}{C_RESET}")
     else:
-        logger.warning(f"⚠️ {conf_path} not found.")
+        logger.warning(f"{C_YELLOW}[BLACKLIST] {conf_path} not found.{C_RESET}")
 
 def purge_test_ip():
     """Specifically removes the test IP 1.2.3.4 from the database."""
     test_ip = "1.2.3.4"
-    logger.info(f"🧹 Purging test IP: {test_ip}")
+    logger.info(f"{C_CYAN}[CLEAN:TEST_IP] Purging test IP: {test_ip}{C_RESET}")
     
     # Remove from local
     REDIS_CLIENT.delete(f"{KEY_LOCAL}{test_ip}")
@@ -292,7 +313,8 @@ async def periodic_db_cleanup():
     """Runs database cleanup tasks periodically."""
     while True:
         try:
-            logger.info("🧼 [CLEAN:DB] Starting periodic database cleanup...")
+            log_logo()
+            logger.info(f"{C_CYAN}[CLEAN:DB] Starting periodic database cleanup...{C_RESET}")
             
             # 1. Reload blacklist from file
             await load_blacklist_from_file()
@@ -303,7 +325,7 @@ async def periodic_db_cleanup():
             # 3. Fetch blacklist once for optimization
             blacklist_members = REDIS_CLIENT.smembers(KEY_BLACKLIST)
             if not blacklist_members:
-                logger.info("ℹ️ [CLEAN:DB] Blacklist is empty, skipping IP scan.")
+                logger.info(f"{C_YELLOW}[CLEAN:DB] Blacklist is empty, skipping IP scan.{C_RESET}")
             else:
                 # 4. Purge blacklisted IPs from DB
                 removed_local = 0
@@ -318,7 +340,7 @@ async def periodic_db_cleanup():
                     for key in keys:
                         ip = key.replace(KEY_LOCAL, "")
                         if is_ip_in_cidr_list(ip, blacklist_members):
-                            logger.info(f"🗑️ [CLEAN:DB] Removing blacklisted local IP: {ip}")
+                            logger.info(f"{C_RED}[CLEAN:DB] Removing blacklisted local IP: {ip}{C_RESET}")
                             REDIS_CLIENT.delete(key)
                             REDIS_CLIENT.decr(KEY_STATS_LOCAL)
                             removed_local += 1
@@ -333,16 +355,16 @@ async def periodic_db_cleanup():
                     for key in keys:
                         ip = key.replace(KEY_OSINT, "")
                         if is_ip_in_cidr_list(ip, blacklist_members):
-                            logger.info(f"🗑️ [CLEAN:DB] Removing blacklisted OSINT IP: {ip}")
+                            logger.info(f"{C_RED}[CLEAN:DB] Removing blacklisted OSINT IP: {ip}{C_RESET}")
                             REDIS_CLIENT.delete(key)
                             REDIS_CLIENT.decr(KEY_STATS_OSINT)
                             removed_osint += 1
                     if str(cursor) == '0':
                         break
 
-                logger.info(f"✨ [CLEAN:DB] Database cleanup finished. Scanned {total_scanned} keys, removed {removed_local} local, {removed_osint} osint IPs.")
+                logger.info(f"{C_GREEN}[CLEAN:DB] Cleanup finished. Scanned {total_scanned} keys, removed {removed_local} local, {removed_osint} osint IPs.{C_RESET}")
         except Exception as e:
-            logger.error(f"❌ [CLEAN:DB] Error during periodic cleanup: {e}")
+            logger.error(f"{C_RED}[CLEAN:DB] Error during periodic cleanup: {e}{C_RESET}")
         
         await asyncio.sleep(3600) # Every 1 hour
 
@@ -356,20 +378,21 @@ async def ip_reputation(resource: str, apikey: str):
     
     severity, judgments = get_ip_reputation(resource)
     
-    # Logging with emojis
+    # Logging with colors
     if severity == "high":
-        logger.info(f"💀 High Risk IP Check: {resource} - {judgments}")
+        logger.info(f"{C_RED}[REPUTATION] High Risk IP Check: {resource} - {judgments}{C_RESET}")
     elif severity == "medium":
-        logger.info(f"⚠️ Medium Risk IP Check: {resource} - {judgments}")
+        logger.info(f"{C_YELLOW}[REPUTATION] Medium Risk IP Check: {resource} - {judgments}{C_RESET}")
     elif "whitelist" in judgments:
-        logger.info(f"🛡️ Whitelisted IP Check: {resource}")
+        logger.info(f"{C_GREEN}[REPUTATION] Whitelisted IP Check: {resource}{C_RESET}")
     else:
-        logger.info(f"🔍 Clean IP Check: {resource}")
+        logger.info(f"{C_BLUE}[REPUTATION] Clean IP Check: {resource}{C_RESET}")
         
     return format_threatbook_v3(resource, severity, judgments)
 
 @app.post("/webhook")
 async def hfish_webhook(data: HFishWebhook):
+    logger.info(f"{C_BLUE}[WEBHOOK] Received attack from: {data.attack_ip}{C_RESET}")
     # Store local data for 365 days
     ip_key = f"{KEY_LOCAL}{data.attack_ip}"
     is_new = not REDIS_CLIENT.exists(ip_key)
@@ -386,9 +409,9 @@ async def hfish_webhook(data: HFishWebhook):
     REDIS_CLIENT.setex(ip_key, timedelta(days=365), datetime.now().isoformat())
     
     if is_new:
-        logger.info(f"✅ New IP added: {data.attack_ip}")
+        logger.info(f"{C_GREEN}[WEBHOOK] New IP added: {data.attack_ip}{C_RESET}")
     else:
-        logger.info(f"🔄 Updated existing IP: {data.attack_ip}")
+        logger.info(f"{C_CYAN}[WEBHOOK] Updated existing IP: {data.attack_ip}{C_RESET}")
     
     return {"status": "ok"}
 
