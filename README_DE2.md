@@ -24,6 +24,8 @@
   </h4>
 </div>
 
+---
+
 Honey Cloud Intelligence ist ein Programm für Sicherheit. Es sammelt Daten über Gefahren aus dem Internet. Es holt Daten von eigenen Fallen (Honeypots) und von vielen öffentlichen Listen (über 10 Quellen). Es verhält sich wie die **ThreatBook v3 API**. Das bedeutet, man kann es einfach mit anderen Programmen benutzen. Es ist sehr schnell.
 
 <div align="center">

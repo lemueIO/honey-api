@@ -25,6 +25,8 @@
   </h4>
 </div>
 
+---
+
 Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge designed to aggregate, manage, and serve threat data from local HFish honeypots and global OSINT sources. It emulates the **ThreatBook v3 API**, allowing for seamless integration into existing security tools without hitting external rate limits.
 
 <div align="center">
