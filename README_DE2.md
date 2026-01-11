@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>Schnelle Daten-Brücke für Sicherheit</strong></p>
 
-  [![Version](https://img.shields.io/badge/version-v2.1.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.1.0)
+  [![Version](https://img.shields.io/badge/version-v2.2.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.2.0)
   [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge&logo=none)](LICENSE)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)

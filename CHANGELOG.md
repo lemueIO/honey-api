@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2026-01-11
+
+### Added
+- **Documentation**: Added repository status badges (Repo Size, License, Last Commit, Open Issues) to READMEs.
+- **Security**: Added `.gitaccounts` to `.gitignore` to prevent sensitive data leakage.
+
+### Changed
+- **Versioning**: Minor version bump to v2.2.0.
+
 ## [2.1.0] - 2026-01-10
 
 ### Added
