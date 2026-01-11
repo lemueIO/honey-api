@@ -5,7 +5,7 @@
   <h1>Honey Cloud Intelligence</h1>
   <p><strong>Високопродуктивний міст та агрегатор розвідки загроз</strong></p>
 
-  [![beta](https://img.shields.io/badge/beta-v2.2.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.2.0)
+  [![beta](https://img.shields.io/badge/beta-v2.3.0-blue?style=for-the-badge&logo=none)](https://github.com/lemueIO/honey-api/releases/tag/v2.3.0)
   [![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Docker](https://img.shields.io/badge/docker-enabled-blue?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
   [![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge&logo=activity&logoColor=white)](https://github.com/lemueIO/honey-api)

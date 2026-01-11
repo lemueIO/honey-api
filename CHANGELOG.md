@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2026-01-11
+
+### 🛡️ Security & Ops
+- **Hetzner Protection**: 🛡️ Implemented comprehensive Hetzner Infrastructure Whitelist in `scan-blacklist.conf` to prevent self-banning of critical server components (Management, Monitoring, DNS).
+- **Fail2Ban Integration**: 🔗 Synchronized Hetzner whitelist with Fail2Ban configuration (`jail.local`) to ensure consistent protection across the stack.
+
+### 🐛 Fixed
+- **Config Parsing**: 🐛 Fixed a critical bug in `scan-blacklist.conf` parsing where inline comments (e.g., `# Comment`) were incorrectly interpreted as part of the CIDR, causing load failures.
+- **Git workflow**: 🏗️ Created `scan-blacklist.conf.example` for public repository and untracked the production config to prevent accidental overrides.
+
+### 🛠️ Changed
+- **Versioning**: 🏷️ Minor version bump to v2.3.0.
+
 ## [2.2.0] - 2026-01-11
 
 ### ✨ Added

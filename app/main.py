@@ -27,7 +27,7 @@ REDIS_CLIENT = redis.from_url(REDIS_URL, decode_responses=True)
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", "change-me-at-all-costs")
 
-app = FastAPI(title="Threat Intelligence Bridge", version="2.2.0")
+app = FastAPI(title="Threat Intelligence Bridge", version="2.3.0")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 
 @app.get("/health")
