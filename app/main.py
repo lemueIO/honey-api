@@ -295,7 +295,12 @@ async def load_blacklist_from_file():
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith("#"):
-                        REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
+                        # Strip inline comments
+                        if "#" in line:
+                            line = line.split("#")[0]
+                        line = line.strip()
+                        if line:
+                            REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
             logger.info(f"{C_GREEN}[BLACKLIST] Loaded from {conf_path}{C_RESET}")
         except Exception as e:
             logger.error(f"{C_RED}[BLACKLIST] Error loading {conf_path}: {e}{C_RESET}")
