@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.1] - 2026-01-12
+
+### 🐛 Fixed
+- **UI**: 🐛 Fixed missing "Global Cloud Status" link on the public status page (`/status`). Now matches the functionality of the internal dashboard.
+- **Status Page**: 🎨 Updated layout to include "Global Cloud Status" indicator for consistent user experience between public and private views.
+
+### 🛠️ Changed
+- **Versioning**: 🏷️ Patch version bump to v2.3.1.
 ## [2.3.0] - 2026-01-11
 
 ### 🛡️ Security & Ops
