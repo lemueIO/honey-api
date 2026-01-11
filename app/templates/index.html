@@ -174,9 +174,9 @@
             <div class="col-md-3">
                 <div class="card stat-card bg-blacklist h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Blacklist</h5>
+                        <h5 class="card-title">Scan-Blacklist</h5>
                         <p class="display-6 fw-bold mb-0" id="stats-blacklist">{{ stats.blacklist }}</p>
-                        <small>Permanent</small>
+                        <small>Silently Discarded</small>
                     </div>
                 </div>
             </div>
@@ -302,7 +302,7 @@
                             </div>
                             <div class="col-md-3">
                                 <select name="list_type" class="form-select">
-                                    <option value="blacklist">Blacklist</option>
+                                    <option value="blacklist">Scan-Blacklist</option>
                                     <option value="whitelist">Whitelist</option>
                                 </select>
                             </div>
@@ -318,7 +318,8 @@
                                 <div class="p-3 border rounded bg-opacity-10"
                                     style="background-color: #0d1117; border-color: #30363d !important;">
                                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
-                                        <span><i class="bi bi-shield-slash text-danger"></i> Permanent Blacklist</span>
+                                        <span><i class="bi bi-shield-slash text-danger"></i> Scan-Blacklist
+                                            (Discarded)</span>
                                         <span class="badge bg-danger rounded-pill" id="badge-blacklist">{{
                                             stats.blacklist }}</span>
                                     </h6>
@@ -400,6 +401,32 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Manual Ban / Forced Reporting -->
+                <div class="card mt-4">
+                    <div class="card-header py-3 border-0">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Manual IP Ban &
+                            Reporting</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-4">
+                            Use this function to manually inject an IP into the Honey Cloud Intelligence database.
+                            The IP will be treated as a fresh attack, triggering any external notifications or
+                            processing.
+                        </p>
+                        <form action="/api/ban" method="post" class="row g-3">
+                            <div class="col-md-9">
+                                <input type="text" name="ip" class="form-control"
+                                    placeholder="IP Address to ban and report (e.g. 8.8.8.8)" required>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="bi bi-megaphone-fill"></i> Ban & Report IP
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

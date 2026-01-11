@@ -395,6 +395,12 @@ async def ip_reputation(resource: str, apikey: str):
 
 @app.post("/webhook")
 async def hfish_webhook(data: HFishWebhook):
+    # 1. Immediate filtering for Scan-Blacklist
+    blacklist_members = REDIS_CLIENT.smembers(KEY_BLACKLIST)
+    if is_ip_in_cidr_list(data.attack_ip, blacklist_members):
+        logger.info(f"{C_RED}[WEBHOOK] Discarding attack from Scan-Blacklisted IP: {data.attack_ip}{C_RESET}")
+        return {"status": "filtered", "reason": "scan-blacklist"}
+
     logger.info(f"{C_BLUE}[WEBHOOK] Received attack from: {data.attack_ip}{C_RESET}")
     # Store local data for 365 days
     ip_key = f"{KEY_LOCAL}{data.attack_ip}"
@@ -417,6 +423,24 @@ async def hfish_webhook(data: HFishWebhook):
         logger.info(f"{C_CYAN}[WEBHOOK] Updated existing IP: {data.attack_ip}{C_RESET}")
     
     return {"status": "ok"}
+
+@app.post("/api/ban")
+async def manual_ban(ip: str = Form(...), user: str = Depends(get_current_user)):
+    if not user: return RedirectResponse(url="/login")
+    
+    logger.info(f"{C_RED}[MANUAL BAN] Manually banning IP: {ip} for processing/reporting{C_RESET}")
+    
+    ip_key = f"{KEY_LOCAL}{ip}"
+    is_new = not REDIS_CLIENT.exists(ip_key)
+    
+    if is_new:
+         REDIS_CLIENT.incr("stats:cloud_new_24h")
+         REDIS_CLIENT.incr(KEY_STATS_LOCAL)
+         if REDIS_CLIENT.ttl("stats:cloud_new_24h") == -1:
+             REDIS_CLIENT.expire("stats:cloud_new_24h", 86400)
+    
+    REDIS_CLIENT.setex(ip_key, timedelta(days=365), datetime.now().isoformat())
+    return RedirectResponse(url="/", status_code=303)
 
 # --- Auth Routes ---
 
