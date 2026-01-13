@@ -170,9 +170,16 @@
                     <div class="card stat-card bg-whitelist h-100">
                         <div class="card-body">
                             <h5 class="card-title">Whitelist</h5>
-                            <p class="display-6 fw-bold mb-0" id="stats-whitelist" data-value="{{ stats.whitelist }}">-
-                            </p>
-                            <small>Permanent</small>
+                            <div class="d-flex justify-content-center align-items-baseline gap-2 mb-1">
+                                <span class="fs-4 fw-bold" id="stats-whitelist-networks"
+                                    data-value="{{ stats.whitelist }}">-</span>
+                                <small class="text-white-50">Rules</small>
+                            </div>
+                            <div class="d-flex justify-content-center align-items-baseline gap-2">
+                                <span class="fs-4 fw-bold" id="stats-whitelist-ips-display"
+                                    data-value="{{ stats.whitelist_ips }}">-</span>
+                                <small class="text-white-50">IPs</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -235,12 +242,15 @@
                         if (value === undefined || value === null) return '-';
                         if (value === 0) return '0';
 
-                        // Handle ultra-large numbers
-                        if (value >= 1e33) {
-                            return value.toExponential(4);
+                        // Handle ultra-large numbers > 1e42
+                        if (value >= 1e42) {
+                            return value.toExponential(4); // e.g. "2.6584e+45"
                         }
 
                         const tiers = [
+                            { val: 1e39, suffix: ' DD' }, // Duodecillion
+                            { val: 1e36, suffix: ' U' },  // Undecillion
+                            { val: 1e33, suffix: ' D' },  // Decillion
                             { val: 1e30, suffix: ' Q' },  // Quetta
                             { val: 1e27, suffix: ' R' },  // Ronna
                             { val: 1e24, suffix: ' Y' },  // Yotta
@@ -289,103 +299,64 @@
                                         el.innerText = newValue; // Default for others
                                         previousStats[key] = newValue;
                                     }
-                                };
-
-                                updateField('stats-local', 'local');
-                                updateField('stats-osint', 'osint');
-
-                                // Update Blacklist Rules Count
-                                const blRulesEl = document.getElementById('stats-blacklist-networks');
-                                if (blRulesEl && data.blacklist !== undefined) {
-                                    const val = data.blacklist;
-                                    if (previousStats['blacklist'] !== val) {
-                                        // animateElement('stats-blacklist-networks');
-                                        previousStats['blacklist'] = val;
-                                    }
-                                    blRulesEl.innerText = formatRecount(val);
-                                }
-
-                                // Special formatting for Blacklist IPs
-                                const blEl = document.getElementById('stats-blacklist-ips-display');
-                                if (blEl && data.blacklist_ips !== undefined) {
-                                    const val = data.blacklist_ips;
-                                    apiDot.style.backgroundColor = '#238636';
-                                    apiText.innerText = 'Online';
-                                    apiText.style.color = '#238636';
-                                } else {
-                                    apiDot.style.backgroundColor = '#da3633';
-                                    apiText.innerText = 'Offline';
-                                    apiText.style.color = '#da3633';
+                                    card.classList.add('pulse');
                                 }
                             }
+        }
 
-                                if (lastCloud) {
-                            const val = data.last_cloud_count || 0;
-                            const sign = val >= 0 ? '+' : '';
-                            lastCloud.innerText = `${sign}${val}`;
-                        }
-                        if (lastOsint) {
-                            const val = data.last_osint_count || 0;
-                            const sign = val >= 0 ? '+' : '';
-                            lastOsint.innerText = `${sign}${val}`;
-                        }
-                    })
-                            .catch (error => console.error('Error fetching stats:', error));
-                }
+                    // Formatter matching user request "2.6584 T" (4 decimal places)
+                    function formatRecount(value) {
+                        if (value === undefined || value === null) return '-';
+                        if (value === 0) return '0';
 
-                // Initialize previousStats from DOM/Data Attributes
-                document.addEventListener('DOMContentLoaded', () => {
-                    const initVal = (id, key) => {
-                        const el = document.getElementById(id);
-                        if (el) {
-                            let val = 0;
-                            if (el.hasAttribute('data-value')) {
-                                const raw = el.getAttribute('data-value');
-                                val = parseFloat(raw);
-                                if (!isNaN(val)) {
-                                    // Immediately format specific fields
-                                    if (id === 'stats-blacklist-ips-display' || id === 'stats-whitelist') {
-                                        el.innerText = formatRecount(val);
-                                    } else {
-                                        el.innerText = val;
-                                    }
-                                }
-                            } else {
-                                val = parseInt(el.innerText.replace(/,/g, ''));
+                        // Handle ultra-large numbers > 1e42
+                        if (value >= 1e42) {
+                            return value.toExponential(4); // e.g. "2.6584e+45"
+                        }
+
+                        const tiers = [
+                            { val: 1e39, suffix: ' DD' }, // Duodecillion
+                            { val: 1e36, suffix: ' U' },  // Undecillion
+                            { val: 1e33, suffix: ' D' },  // Decillion
+                            { val: 1e30, suffix: ' Q' },  // Quetta
+                            { val: 1e27, suffix: ' R' },  // Ronna
+                            { val: 1e24, suffix: ' Y' },  // Yotta
+                            { val: 1e21, suffix: ' Z' },  // Zetta
+                            { val: 1e18, suffix: ' E' },  // Exa
+                            { val: 1e15, suffix: ' P' },  // Peta
+                            { val: 1e12, suffix: ' T' },  // Tera
+                            { val: 1e9, suffix: ' B' },   // Billion
+                            { val: 1e6, suffix: ' M' },   // Mega
+                            { val: 1e3, suffix: ' k' }    // Kilo
+                        ];
+
+                        for (const tier of tiers) {
+                            if (value >= tier.val) {
+                                const num = value / tier.val;
+                                // "2.6584" formatted
+                                return num.toFixed(4) + tier.suffix;
                             }
-                            previousStats[key] = isNaN(val) ? 0 : val;
                         }
-                    };
-
-                    // Initialize fields
-                    initVal('stats-local', 'local');
-                    initVal('stats-osint', 'osint');
-
-                    // Lists
-                    const blEl = document.getElementById('stats-blacklist-ips-display');
-                    if (blEl && blEl.hasAttribute('data-value')) {
-                        const raw = parseFloat(blEl.getAttribute('data-value'));
-                        previousStats['blacklist_ips'] = isNaN(raw) ? 0 : raw;
-                        blEl.innerText = formatRecount(raw);
-                    } else {
-                        if (blEl) previousStats['blacklist_ips'] = 0;
+                        return value.toString();
                     }
 
-                    // Whitelist
-                    const wlEl = document.getElementById('stats-whitelist');
-                    if (wlEl && wlEl.hasAttribute('data-value')) {
-                        const raw = parseFloat(wlEl.getAttribute('data-value'));
-                        previousStats['whitelist'] = isNaN(raw) ? 0 : raw;
-                        wlEl.innerText = formatRecount(raw);
-                    } else {
-                        initVal('stats-whitelist', 'whitelist');
-                    }
-                    // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
-                    // Actually I should pass them in template context in main.py too.
-                    updateStats();
-                });
+                    function updateStats() {
+                        // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
+                        // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
+                        // I need to create a PUBLIC stats endpoint or modify /api/stats to be optional auth?
+                        const wlIPs = document.getElementById('stats-whitelist-ips-display');
+                        if (wlIPs && wlIPs.hasAttribute('data-value')) {
+                            const raw = parseFloat(wlIPs.getAttribute('data-value'));
+                            previousStats['whitelist_ips'] = isNaN(raw) ? 0 : raw;
+                            wlIPs.innerText = formatRecount(raw);
+                        }
 
-                setInterval(updateStats, 10000);
+                        // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
+                        // Actually I should pass them in template context in main.py too.
+                        updateStats();
+                    });
+
+                    setInterval(updateStats, 10000);
     </script>
 </body>
 

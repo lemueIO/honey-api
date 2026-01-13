@@ -191,8 +191,16 @@
                 <div class="card stat-card bg-whitelist h-100">
                     <div class="card-body">
                         <h5 class="card-title">Whitelist</h5>
-                        <p class="display-6 fw-bold mb-0" id="stats-whitelist" data-value="{{ stats.whitelist }}">-</p>
-                        <small>Permanent</small>
+                        <div class="d-flex justify-content-center align-items-baseline gap-2 mb-1">
+                            <span class="fs-4 fw-bold" id="stats-whitelist-networks"
+                                data-value="{{ stats.whitelist }}">-</span>
+                            <small class="text-white-50">Rules</small>
+                        </div>
+                        <div class="d-flex justify-content-center align-items-baseline gap-2">
+                            <span class="fs-4 fw-bold" id="stats-whitelist-ips-display"
+                                data-value="{{ stats.whitelist_ips }}">-</span>
+                            <small class="text-white-50">IPs</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -507,12 +515,15 @@
             if (value === undefined || value === null) return '-';
             if (value === 0) return '0';
 
-            // Handle ultra-large numbers
-            if (value >= 1e33) {
-                return value.toExponential(4); // e.g. "2.6584e+36"
+            // Handle ultra-large numbers > 1e42
+            if (value >= 1e42) {
+                return value.toExponential(4); // e.g. "2.6584e+45"
             }
 
             const tiers = [
+                { val: 1e39, suffix: ' DD' }, // Duodecillion
+                { val: 1e36, suffix: ' U' },  // Undecillion
+                { val: 1e33, suffix: ' D' },  // Decillion
                 { val: 1e30, suffix: ' Q' },  // Quetta
                 { val: 1e27, suffix: ' R' },  // Ronna
                 { val: 1e24, suffix: ' Y' },  // Yotta
@@ -563,8 +574,6 @@
 
                     updateField('stats-local', 'local');
                     updateField('stats-osint', 'osint');
-                    updateField('stats-local', 'local');
-                    updateField('stats-osint', 'osint');
 
                     // Update Blacklist Rules Count
                     const blRulesEl = document.getElementById('stats-blacklist-networks');
@@ -587,18 +596,26 @@
                         blEl.innerText = formatRecount(val);
                     }
 
-                    // Update Whitelist with Formatting
-                    const wlEl = document.getElementById('stats-whitelist');
-                    if (wlEl && data.whitelist !== undefined) {
+                    // Update Whitelist Rules Count
+                    const wlRulesEl = document.getElementById('stats-whitelist-networks');
+                    if (wlRulesEl && data.whitelist !== undefined) {
                         const val = data.whitelist;
                         if (previousStats['whitelist'] !== val) {
-                            animateElement('stats-whitelist');
                             previousStats['whitelist'] = val;
+                        }
+                        wlRulesEl.innerText = formatRecount(val);
+                    }
+
+                    // Update Whitelist IPs Display
+                    const wlEl = document.getElementById('stats-whitelist-ips-display');
+                    if (wlEl && data.whitelist_ips !== undefined) {
+                        const val = data.whitelist_ips;
+                        if (previousStats['whitelist_ips'] !== val) {
+                            animateElement('stats-whitelist-ips-display');
+                            previousStats['whitelist_ips'] = val;
                         }
                         wlEl.innerText = formatRecount(val);
                     }
-
-                    // updateField('stats-whitelist', 'whitelist'); // Removed simple update
 
                     // Update List Badges
                     const badgeBlacklist = document.getElementById('badge-blacklist');
@@ -644,22 +661,26 @@
             const initVal = (id, key) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    // Check for data-value first (for raw numbers passed from Jinja)
                     let val = 0;
                     if (el.hasAttribute('data-value')) {
                         const raw = el.getAttribute('data-value');
-                        // Use parseFloat because data-value might be a massive int string
                         val = parseFloat(raw);
                         if (!isNaN(val)) {
-                            // Immediately format it on load!
-                            if (id === 'stats-blacklist-ips-display' || id === 'stats-blacklist-networks' || id === 'stats-whitelist') {
+                            // Immediately format specific fields
+                            const needsFormat = [
+                                'stats-blacklist-ips-display',
+                                'stats-blacklist-networks',
+                                'stats-whitelist-ips-display',
+                                'stats-whitelist-networks'
+                            ].includes(id);
+
+                            if (needsFormat) {
                                 el.innerText = formatRecount(val);
                             } else {
                                 el.innerText = val;
                             }
                         }
                     } else {
-                        // Fallback to parsing comma text
                         val = parseInt(el.innerText.replace(/,/g, ''));
                     }
                     previousStats[key] = isNaN(val) ? 0 : val;
@@ -667,17 +688,36 @@
             };
             initVal('stats-local', 'local');
             initVal('stats-osint', 'osint');
-            // Manual init for display
-            const blEl = document.getElementById('stats-blacklist-ips-display');
-            // If data-value is present, initVal handled the render.
-            if (blEl && blEl.hasAttribute('data-value')) {
-                const raw = parseFloat(blEl.getAttribute('data-value'));
-                previousStats['blacklist_ips'] = isNaN(raw) ? 0 : raw;
-                blEl.innerText = formatRecount(raw); // Force immediate render
-            } else {
-                if (blEl) previousStats['blacklist_ips'] = 0;
+
+            // Blacklist
+            const blRules = document.getElementById('stats-blacklist-networks');
+            if (blRules && blRules.hasAttribute('data-value')) {
+                const raw = parseFloat(blRules.getAttribute('data-value'));
+                previousStats['blacklist'] = isNaN(raw) ? 0 : raw;
+                blRules.innerText = formatRecount(raw);
             }
-            initVal('stats-whitelist', 'whitelist');
+
+            const blIPs = document.getElementById('stats-blacklist-ips-display');
+            if (blIPs && blIPs.hasAttribute('data-value')) {
+                const raw = parseFloat(blIPs.getAttribute('data-value'));
+                previousStats['blacklist_ips'] = isNaN(raw) ? 0 : raw;
+                blIPs.innerText = formatRecount(raw);
+            }
+
+            // Whitelist
+            const wlRules = document.getElementById('stats-whitelist-networks');
+            if (wlRules && wlRules.hasAttribute('data-value')) {
+                const raw = parseFloat(wlRules.getAttribute('data-value'));
+                previousStats['whitelist'] = isNaN(raw) ? 0 : raw;
+                wlRules.innerText = formatRecount(raw);
+            }
+
+            const wlIPs = document.getElementById('stats-whitelist-ips-display');
+            if (wlIPs && wlIPs.hasAttribute('data-value')) {
+                const raw = parseFloat(wlIPs.getAttribute('data-value'));
+                previousStats['whitelist_ips'] = isNaN(raw) ? 0 : raw;
+                wlIPs.innerText = formatRecount(raw);
+            }
         });
 
         // Poll every 10 seconds
