@@ -312,7 +312,7 @@ async def load_blacklist_from_file():
             if conf_path == "scan-blacklist.conf":
                 logger.warning(f"{C_YELLOW}[BLACKLIST] {conf_path} not found.{C_RESET}")
             else:
-                logger.info(f"{C_BLUE}[BLACKLIST] {conf_path} not found (optional).{C_RESET}")
+                logger.info(f"{C_BLUE}[BLACKLIST] {conf_path} not found (optional) - Skipping.{C_RESET}")
 
 def purge_test_ip():
     """Specifically removes the test IP 1.2.3.4 from the database."""
