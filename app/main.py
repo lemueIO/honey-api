@@ -170,11 +170,12 @@ async def fetch_osint_feeds():
             logger.info(f"{C_CYAN}[FETCH:OSINT] Starting OSINT feed update cycle...{C_RESET}")
             count = 0 
             
-            def process_text_feed(url, timeout=10):
+            async def process_text_feed(url, timeout=10):
                 local_count = 0
                 logger.info(f"{C_BLUE}[FETCH:OSINT] Processing feed: {url}{C_RESET}")
                 try:
-                    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Honey-API-Bridge/1.0"})
+                    loop = asyncio.get_event_loop()
+                    r = await loop.run_in_executor(None, lambda: requests.get(url, timeout=timeout, headers={"User-Agent": "Honey-API-Bridge/1.0"}))
                     if r.status_code == 200:
                         for line in r.text.splitlines():
                             line = line.strip()
@@ -194,13 +195,14 @@ async def fetch_osint_feeds():
                 return local_count
 
             # 1. Feodo Tracker
-            new_feodo = process_text_feed("https://feodotracker.abuse.ch/downloads/ipblocklist.txt")
+            new_feodo = await process_text_feed("https://feodotracker.abuse.ch/downloads/ipblocklist.txt")
             count += new_feodo
             
             # 2. IPSum (Top level)
             new_ipsum = 0
             try:
-                r = requests.get("https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", timeout=10)
+                loop = asyncio.get_event_loop()
+                r = await loop.run_in_executor(None, lambda: requests.get("https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", timeout=10))
                 if r.status_code == 200:
                     for line in r.text.splitlines():
                         if line and not line.startswith("#"):
@@ -216,27 +218,28 @@ async def fetch_osint_feeds():
             count += new_ipsum
 
             # 3. CINS Army
-            count += process_text_feed("http://cinsscore.com/list/ci-badguys.txt")
+            count += await process_text_feed("http://cinsscore.com/list/ci-badguys.txt")
 
             # 4. GreenSnow
-            count += process_text_feed("https://blocklist.greensnow.co/greensnow.txt")
+            count += await process_text_feed("https://blocklist.greensnow.co/greensnow.txt")
 
             # 5. Blocklist.de
-            count += process_text_feed("https://lists.blocklist.de/lists/all.txt")
+            count += await process_text_feed("https://lists.blocklist.de/lists/all.txt")
 
             # 6. Emerging Threats
-            count += process_text_feed("https://rules.emergingthreats.net/blockrules/compromised-ips.txt")
+            count += await process_text_feed("https://rules.emergingthreats.net/blockrules/compromised-ips.txt")
 
             # 7. BinaryDefense
-            count += process_text_feed("https://www.binarydefense.com/banlist.txt")
+            count += await process_text_feed("https://www.binarydefense.com/banlist.txt")
 
             # 8. DShield
-            count += process_text_feed("https://feeds.dshield.org/block.txt")
+            count += await process_text_feed("https://feeds.dshield.org/block.txt")
 
             # 9. ThreatFox (CSV parsing)
             new_threatfox = 0
             try:
-                r = requests.get("https://threatfox.abuse.ch/export/csv/ip-port/recent/", timeout=15)
+                loop = asyncio.get_event_loop()
+                r = await loop.run_in_executor(None, lambda: requests.get("https://threatfox.abuse.ch/export/csv/ip-port/recent/", timeout=15))
                 if r.status_code == 200:
                     for line in r.text.splitlines():
                         if line and not line.startswith("#") and "ip:port" in line:
