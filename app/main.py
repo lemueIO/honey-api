@@ -350,6 +350,28 @@ async def load_blacklist_from_file():
 
     final_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     logger.info(f"{C_GREEN}[CACHE:WEBHOOK] Cache reload complete. Total active rules: {final_count} (Loaded: {total_loaded}){C_RESET}")
+    
+    # Recalculate IP stats
+    await calculate_and_cache_blacklist_stats()
+
+async def calculate_and_cache_blacklist_stats():
+    """Calculates the total number of IPs in the blacklist (expanding CIDRs) and caches it."""
+    try:
+        blacklist_members = REDIS_CLIENT.smembers(KEY_BLACKLIST)
+        total_ips = 0
+        for member in blacklist_members:
+            try:
+                if "/" in member:
+                    total_ips += ipaddress.ip_network(member, strict=False).num_addresses
+                else:
+                    total_ips += 1
+            except ValueError:
+                continue
+        
+        REDIS_CLIENT.set("stats:blacklist_ip_count", total_ips)
+        logger.info(f"{C_GREEN}[STATS] blacklist_ip_count updated: {total_ips} IPs.{C_RESET}")
+    except Exception as e:
+        logger.error(f"{C_RED}[STATS] Error calculating blacklist IPs: {e}{C_RESET}")
 
 def purge_test_ip():
     """Specifically removes the test IP 1.2.3.4 from the database."""
@@ -533,12 +555,15 @@ async def dashboard(request: Request, user: str = Depends(get_current_user)):
     blacklist = list(REDIS_CLIENT.smembers(KEY_BLACKLIST))
     whitelist = list(REDIS_CLIENT.smembers(KEY_WHITELIST))
     
+    blacklist_ips = int(REDIS_CLIENT.get("stats:blacklist_ip_count") or 0)
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "stats": {
             "local": local_ips,
             "osint": osint_ips,
             "blacklist": blacklist_count,
+            "blacklist_ips": blacklist_ips,
             "whitelist": whitelist_count
         },
         "api_keys": api_keys_dict,
@@ -556,6 +581,8 @@ async def get_stats(user: str = Depends(get_current_user)):
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
+    blacklist_ips = int(REDIS_CLIENT.get("stats:blacklist_ip_count") or 0)
+
     # Check External API Status
     api_up = False
     
@@ -595,6 +622,7 @@ async def get_stats(user: str = Depends(get_current_user)):
         "local": local_ips,
         "osint": osint_ips,
         "blacklist": blacklist_count,
+        "blacklist_ips": blacklist_ips,
         "whitelist": whitelist_count,
         "api_up": api_up,
         "last_osint_count": int(last_osint_count),
@@ -611,12 +639,15 @@ async def status_page(request: Request):
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
+    blacklist_ips = int(REDIS_CLIENT.get("stats:blacklist_ip_count") or 0)
+
     return templates.TemplateResponse("status.html", {
         "request": request,
         "stats": {
             "local": local_ips,
             "osint": osint_ips,
             "blacklist": blacklist_count,
+            "blacklist_ips": blacklist_ips,
             "whitelist": whitelist_count
         }
     })
@@ -628,6 +659,8 @@ async def get_public_stats():
     blacklist_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
     whitelist_count = REDIS_CLIENT.scard(KEY_WHITELIST)
     
+    blacklist_ips = int(REDIS_CLIENT.get("stats:blacklist_ip_count") or 0)
+
     # Check External API Status (Publicly exposed on status page)
     api_up = False
     
@@ -664,6 +697,7 @@ async def get_public_stats():
         "local": local_ips,
         "osint": osint_ips,
         "blacklist": blacklist_count,
+        "blacklist_ips": blacklist_ips,
         "whitelist": whitelist_count,
         "api_up": api_up,
         "last_osint_count": int(last_osint_count),

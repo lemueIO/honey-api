@@ -175,8 +175,10 @@
                 <div class="card stat-card bg-blacklist h-100">
                     <div class="card-body">
                         <h5 class="card-title">Scan-Blacklist</h5>
-                        <p class="display-6 fw-bold mb-0" id="stats-blacklist">{{ stats.blacklist }}</p>
-                        <small>Silently Discarded</small>
+                        <p class="display-6 fw-bold mb-0">
+                            <span id="stats-blacklist">{{ stats.blacklist }}</span> <span class="fs-6 text-muted">/</span> <span id="stats-blacklist-ips" class="fs-4">{{ stats.blacklist_ips }}</span>
+                        </p>
+                        <small>Rules / Total IPs</small>
                     </div>
                 </div>
             </div>
@@ -524,6 +526,8 @@
                     updateField('stats-local', 'local');
                     updateField('stats-osint', 'osint');
                     updateField('stats-blacklist', 'blacklist');
+                    updateField('stats-blacklist-ips', 'blacklist_ips');
+                    updateField('stats-whitelist', 'whitelist');
                     updateField('stats-whitelist', 'whitelist');
 
                     // Update List Badges
@@ -578,6 +582,8 @@
             initVal('stats-local', 'local');
             initVal('stats-osint', 'osint');
             initVal('stats-blacklist', 'blacklist');
+            initVal('stats-blacklist-ips', 'blacklist_ips');
+            initVal('stats-whitelist', 'whitelist');
             initVal('stats-whitelist', 'whitelist');
         });
 

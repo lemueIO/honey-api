@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - 2026-01-13
+
+### ✨ Added
+- **Blacklist Stats**: 📊 Enhanced "Scan-Blacklist" display to show both rule count and total blocked IPs (expanding CIDR ranges) on Dashboard and Status Page.
+
+### 🛠️ Changed
+- **Versioning**: 🏷️ Minor version bump to v2.4.0.
+
 ## [2.3.1] - 2026-01-12
 
 ### 🐛 Fixed
