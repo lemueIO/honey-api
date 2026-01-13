@@ -26,6 +26,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 REDIS_CLIENT = redis.from_url(REDIS_URL, decode_responses=True)
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", "change-me-at-all-costs")
+GLOBAL_BLACKLIST_URL = "https://raw.githubusercontent.com/derlemue/honey-scan/refs/heads/main/sidecar/scan-blacklist.conf"
 
 app = FastAPI(title="Threat Intelligence Bridge", version="2.3.1")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
@@ -261,6 +262,30 @@ async def fetch_osint_feeds():
         
         await asyncio.sleep(24 * 3600) # Every 24 hours
 
+# --- Background Task: Global Blacklist Update ---
+async def fetch_global_blacklist():
+    while True:
+        try:
+            logger.info(f"{C_CYAN}[FETCH:BLACKLIST] Starting global blacklist update...{C_RESET}")
+            r = requests.get(GLOBAL_BLACKLIST_URL, timeout=30)
+            if r.status_code == 200:
+                # Validate content briefly (check if it looks like a config file)
+                if r.text and len(r.text) > 10:
+                    with open("scan-blacklist.conf", "w") as f:
+                        f.write(r.text)
+                    logger.info(f"{C_GREEN}[FETCH:BLACKLIST] scan-blacklist.conf updated from Git.{C_RESET}")
+                    
+                    # Reload into Redis
+                    await load_blacklist_from_file()
+                else:
+                    logger.warning(f"{C_RED}[FETCH:BLACKLIST] Downloaded content seems empty or too short.{C_RESET}")
+            else:
+                logger.warning(f"{C_RED}[FETCH:BLACKLIST] Failed to fetch blacklist. Status: {r.status_code}{C_RESET}")
+        except Exception as e:
+            logger.error(f"{C_RED}[FETCH:BLACKLIST] Error updating global blacklist: {e}{C_RESET}")
+        
+        await asyncio.sleep(600) # Every 10 minutes
+
 @app.on_event("startup")
 async def startup_event():
     log_logo()
@@ -277,6 +302,7 @@ async def startup_event():
         REDIS_CLIENT.set(KEY_STATS_OSINT, osint_count)
     
     asyncio.create_task(fetch_osint_feeds())
+    asyncio.create_task(fetch_global_blacklist())
     asyncio.create_task(periodic_db_cleanup())
     asyncio.create_task(periodic_logo_display())
 
@@ -288,7 +314,14 @@ async def periodic_logo_display():
 
 async def load_blacklist_from_file():
     """Reads scan-blacklist.conf and scan-blacklist-custom.conf to populate REDIS_CLIENT's blacklist."""
+    logger.info(f"{C_CYAN}[CACHE:WEBHOOK] Initiating blacklist cache reload...{C_RESET}")
+    
+    # Optional: Clear existing blacklist to ensure we reflect removals
+    # Using a temporary set would be atomic, but for now we simply delete and reload
+    REDIS_CLIENT.delete(KEY_BLACKLIST)
+    
     conf_files = ["scan-blacklist.conf", "scan-blacklist-custom.conf"]
+    total_loaded = 0
     
     for conf_path in conf_files:
         if os.path.exists(conf_path):
@@ -305,6 +338,7 @@ async def load_blacklist_from_file():
                             if line:
                                 REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
                                 count += 1
+                total_loaded += count
                 logger.info(f"{C_GREEN}[BLACKLIST] Loaded {count} IPs from {conf_path}{C_RESET}")
             except Exception as e:
                 logger.error(f"{C_RED}[BLACKLIST] Error loading {conf_path}: {e}{C_RESET}")
@@ -313,6 +347,9 @@ async def load_blacklist_from_file():
                 logger.warning(f"{C_YELLOW}[BLACKLIST] {conf_path} not found.{C_RESET}")
             else:
                 logger.info(f"{C_BLUE}[BLACKLIST] {conf_path} not found (optional) - Skipping.{C_RESET}")
+
+    final_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
+    logger.info(f"{C_GREEN}[CACHE:WEBHOOK] Cache reload complete. Total active rules: {final_count} (Loaded: {total_loaded}){C_RESET}")
 
 def purge_test_ip():
     """Specifically removes the test IP 1.2.3.4 from the database."""

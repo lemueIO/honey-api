@@ -8,3 +8,4 @@ __pycache__/
 .gitaccounts
 scan-blacklist-custom.conf
 
+scan-blacklist.conf
