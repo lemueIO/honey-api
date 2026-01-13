@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 
 import socket
+import time
 import ipaddress
 import requests
 import redis
@@ -314,6 +315,7 @@ async def periodic_logo_display():
 
 async def load_blacklist_from_file():
     """Reads scan-blacklist.conf and scan-blacklist-custom.conf to populate REDIS_CLIENT's blacklist."""
+    start_time = time.perf_counter()
     logger.info(f"{C_CYAN}[CACHE:WEBHOOK] Initiating blacklist cache reload...{C_RESET}")
     
     # Optional: Clear existing blacklist to ensure we reflect removals
@@ -339,17 +341,19 @@ async def load_blacklist_from_file():
                                 REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
                                 count += 1
                 total_loaded += count
-                logger.info(f"{C_GREEN}[BLACKLIST] Loaded {count} IPs from {conf_path}{C_RESET}")
+                logger.info(f"{C_BLUE}[CACHE:WEBHOOK] Source '{conf_path}': processed {count} rules{C_RESET}")
             except Exception as e:
-                logger.error(f"{C_RED}[BLACKLIST] Error loading {conf_path}: {e}{C_RESET}")
+                logger.error(f"{C_RED}[CACHE:WEBHOOK] Error loading {conf_path}: {e}{C_RESET}")
         else:
             if conf_path == "scan-blacklist.conf":
-                logger.warning(f"{C_YELLOW}[BLACKLIST] {conf_path} not found.{C_RESET}")
+                logger.warning(f"{C_YELLOW}[CACHE:WEBHOOK] Warning: {conf_path} not found.{C_RESET}")
             else:
-                logger.info(f"{C_BLUE}[BLACKLIST] {conf_path} not found (optional) - Skipping.{C_RESET}")
+                logger.info(f"{C_BLUE}[CACHE:WEBHOOK] Info: {conf_path} not found (optional) - Skipping.{C_RESET}")
 
     final_count = REDIS_CLIENT.scard(KEY_BLACKLIST)
-    logger.info(f"{C_GREEN}[CACHE:WEBHOOK] Cache reload complete. Total active rules: {final_count} (Loaded: {total_loaded}){C_RESET}")
+    duration = time.perf_counter() - start_time
+    logger.info(f"{C_GREEN}[CACHE:WEBHOOK] Cache reload complete in {duration:.4f}s.{C_RESET}")
+    logger.info(f"{C_GREEN}[CACHE:WEBHOOK] Cache Load Status: {final_count} Active Rules (from {total_loaded} processed entries){C_RESET}")
     
     # Recalculate IP stats
     await calculate_and_cache_blacklist_stats()

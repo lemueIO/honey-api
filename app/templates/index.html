@@ -175,8 +175,14 @@
                 <div class="card stat-card bg-blacklist h-100">
                     <div class="card-body">
                         <h5 class="card-title">Scan-Blacklist</h5>
-                        <p class="display-6 fw-bold mb-0" id="stats-blacklist-ips-display">-</p>
-                        <small>Silently Discarded IPs</small>
+                        <div class="d-flex justify-content-center align-items-baseline gap-2 mb-1">
+                            <span class="fs-4 fw-bold" id="stats-blacklist-networks">{{ stats.blacklist }}</span>
+                            <small class="text-white-50">Rules</small>
+                        </div>
+                        <div class="d-flex justify-content-center align-items-baseline gap-2">
+                            <span class="fs-4 fw-bold" id="stats-blacklist-ips-display">-</span>
+                            <small class="text-white-50">IPs</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -523,8 +529,18 @@
 
                     updateField('stats-local', 'local');
                     updateField('stats-osint', 'osint');
-                    // updateField('stats-blacklist', 'blacklist'); // Removed per user request
-                    // updateField('stats-blacklist-ips', 'blacklist_ips'); 
+                    updateField('stats-local', 'local');
+                    updateField('stats-osint', 'osint');
+
+                    // Update Blacklist Rules Count
+                    const blRulesEl = document.getElementById('stats-blacklist-networks');
+                    if (blRulesEl && data.blacklist !== undefined) {
+                        const val = data.blacklist;
+                        if (previousStats['blacklist'] !== val) {
+                            previousStats['blacklist'] = val;
+                        }
+                        blRulesEl.innerText = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
+                    }
 
                     // Special formatting for Blacklist IPs
                     const blEl = document.getElementById('stats-blacklist-ips-display');
@@ -534,8 +550,19 @@
                             animateElement('stats-blacklist-ips-display');
                             previousStats['blacklist_ips'] = val;
                         }
-                        // Format using Intl for "2.6M", "3.4B" etc.
-                        blEl.innerText = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
+
+                        // Custom Formatter for massive numbers
+                        let formatted;
+                        if (val > 1e12) {
+                            if (val > 1e24) formatted = (val / 1e24).toFixed(1) + 'Y';
+                            else if (val > 1e21) formatted = (val / 1e21).toFixed(1) + 'Z';
+                            else if (val > 1e18) formatted = (val / 1e18).toFixed(1) + 'E';
+                            else if (val > 1e15) formatted = (val / 1e15).toFixed(1) + 'P';
+                            else formatted = (val / 1e12).toFixed(1) + 'T';
+                        } else {
+                            formatted = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
+                        }
+                        blEl.innerText = formatted;
                     }
                     updateField('stats-whitelist', 'whitelist');
                     updateField('stats-whitelist', 'whitelist');
