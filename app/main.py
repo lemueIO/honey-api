@@ -761,3 +761,24 @@ async def remove_from_list(ip: str = Form(...), list_type: str = Form(...), user
         
     await recalculate_all_stats()
     return RedirectResponse(url="/", status_code=303)
+
+# --- Bridge Redirects for Uptime Kuma (Moved here for route priority) ---
+@app.get("/icon.svg")
+async def get_icon_bridge():
+    return RedirectResponse(url="/cloud/icon.svg")
+
+@app.get("/api/status-page/{path:path}")
+async def status_page_bridge(path: str):
+    return RedirectResponse(url=f"/cloud/api/status-page/{path}")
+
+@app.get("/upload/{path:path}")
+async def upload_bridge(path: str):
+    return RedirectResponse(url=f"/cloud/upload/{path}")
+
+@app.get("/status/{path:path}")
+async def status_kuma_bridge(path: str):
+    """
+    Bridge for Uptime Kuma status pages (e.g. /status/sec).
+    Redirects to the subpath-aware version.
+    """
+    return RedirectResponse(url=f"/cloud/status/{path}")
