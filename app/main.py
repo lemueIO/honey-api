@@ -59,6 +59,14 @@ async def status_page_bridge(path: str):
 async def upload_bridge(path: str):
     return RedirectResponse(url=f"/cloud/upload/{path}")
 
+@app.get("/status/{path:path}")
+async def status_kuma_bridge(path: str):
+    """
+    Bridge for Uptime Kuma status pages (e.g. /status/sec).
+    Redirects to the subpath-aware version.
+    """
+    return RedirectResponse(url=f"/cloud/status/{path}")
+
 
 # --- Logging Colors ---
 C_YELLOW = "\033[93m"
