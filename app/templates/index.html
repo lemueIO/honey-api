@@ -180,7 +180,7 @@
                             <small class="text-white-50">Rules</small>
                         </div>
                         <div class="d-flex justify-content-center align-items-baseline gap-2">
-                            <span class="fs-4 fw-bold" id="stats-blacklist-ips-display">-</span>
+                            <span class="fs-4 fw-bold" id="stats-blacklist-ips-display">{{ stats.blacklist_ips }}</span>
                             <small class="text-white-50">IPs</small>
                         </div>
                     </div>
@@ -501,31 +501,34 @@
             }
         }
 
-        // Formatter for "5 stellige Darstellung" (4 significant digits + dot)
+        // Formatter matching user request "2.6584 T" (4 decimal places)
         function formatRecount(value) {
             if (value === undefined || value === null) return '-';
             if (value === 0) return '0';
 
-            // Handle ultra-large numbers > Yotta (1e24)
-            if (value >= 1e27) {
-                return value.toExponential(2); // e.g. "3.40e+38"
+            // Handle ultra-large numbers
+            if (value >= 1e33) {
+                return value.toExponential(2);
             }
 
             const tiers = [
-                { val: 1e24, suffix: ' Y' },
-                { val: 1e21, suffix: ' Z' },
-                { val: 1e18, suffix: ' E' },
-                { val: 1e15, suffix: ' P' },
-                { val: 1e12, suffix: ' T' },
-                { val: 1e9, suffix: ' B' },
-                { val: 1e6, suffix: ' M' },
-                { val: 1e3, suffix: ' k' }
+                { val: 1e30, suffix: ' Q' },  // Quetta
+                { val: 1e27, suffix: ' R' },  // Ronna
+                { val: 1e24, suffix: ' Y' },  // Yotta
+                { val: 1e21, suffix: ' Z' },  // Zetta
+                { val: 1e18, suffix: ' E' },  // Exa
+                { val: 1e15, suffix: ' P' },  // Peta
+                { val: 1e12, suffix: ' T' },  // Tera
+                { val: 1e9, suffix: ' B' },   // Billion
+                { val: 1e6, suffix: ' M' },   // Mega
+                { val: 1e3, suffix: ' k' }    // Kilo
             ];
 
             for (const tier of tiers) {
                 if (value >= tier.val) {
                     const num = value / tier.val;
-                    return num.toPrecision(4) + tier.suffix;
+                    // "2.6584" formatted
+                    return num.toFixed(4) + tier.suffix;
                 }
             }
             return value.toString();

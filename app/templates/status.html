@@ -228,153 +228,148 @@
                 if (card) {
                     card.classList.remove('pulse');
                     void card.offsetWidth; // trigger reflow
-                    card.classList.add('pulse');
-                }
-            }
-        }
+                    // Formatter matching user request "2.6584 T" (4 decimal places)
+                    function formatRecount(value) {
+                        if (value === undefined || value === null) return '-';
+                        if (value === 0) return '0';
 
-        // Formatter for "5 stellige Darstellung" (4 significant digits + dot)
-        function formatRecount(value) {
-            if (value === undefined || value === null) return '-';
-            if (value === 0) return '0';
+                        // Handle ultra-large numbers
+                        if (value >= 1e33) {
+                            return value.toExponential(2);
+                        }
 
-            // Handle ultra-large numbers (IPv6 ranges) > Yotta (1e24)
-            // 1e27 is Ronna, but not everywhere supported. 
-            // If we are significantly larger than Yotta, fall back to pure scientific to avoid "e+12 Y" mess
-            if (value >= 1e27) {
-                return value.toExponential(2); // e.g. "3.40e+38"
-            }
+                        const tiers = [
+                            { val: 1e30, suffix: ' Q' },  // Quetta
+                            { val: 1e27, suffix: ' R' },  // Ronna
+                            { val: 1e24, suffix: ' Y' },  // Yotta
+                            { val: 1e21, suffix: ' Z' },  // Zetta
+                            { val: 1e18, suffix: ' E' },  // Exa
+                            { val: 1e15, suffix: ' P' },  // Peta
+                            { val: 1e12, suffix: ' T' },  // Tera
+                            { val: 1e9, suffix: ' B' },   // Billion
+                            { val: 1e6, suffix: ' M' },   // Mega
+                            { val: 1e3, suffix: ' k' }    // Kilo
+                        ];
 
-            const tiers = [
-                { val: 1e24, suffix: ' Y' },  // Yotta
-                { val: 1e21, suffix: ' Z' },  // Zetta
-                { val: 1e18, suffix: ' E' },  // Exa
-                { val: 1e15, suffix: ' P' },  // Peta
-                { val: 1e12, suffix: ' T' },  // Tera / Trillion
-                { val: 1e9, suffix: ' B' },   // Billion
-                { val: 1e6, suffix: ' M' },   // Mega
-                { val: 1e3, suffix: ' k' }    // Kilo
-            ];
-
-            for (const tier of tiers) {
-                if (value >= tier.val) {
-                    const num = value / tier.val;
-                    // e.g. 2.658 + T
-                    return num.toPrecision(4) + tier.suffix;
-                }
-            }
-            return value.toString();
-        }
-
-        function updateStats() {
-            // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
-            // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
-            // I need to create a PUBLIC stats endpoint or modify /api/stats to be optional auth?
-            // The prompt asks for this page "without login".
-            // So I MUST add a public stats endpoint or use the same data passed on load and then refresh from a new public endpoint.
-            // I will assume for now I will add a public endpoint in main.py, e.g. /api/public/stats
-
-            fetch('/api/public/stats')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const updateField = (id, key) => {
-                        const el = document.getElementById(id);
-                        if (el) {
-                            const newValue = data[key];
-                            if (previousStats[key] !== null && previousStats[key] !== newValue) {
-                                animateElement(id);
+                        for (const tier of tiers) {
+                            if (value >= tier.val) {
+                                const num = value / tier.val;
+                                // "2.6584" formatted
+                                return num.toFixed(4) + tier.suffix;
                             }
-                            el.innerText = newValue; // Default for others
-                            previousStats[key] = newValue;
                         }
-                    };
-
-                    updateField('stats-local', 'local');
-                    updateField('stats-osint', 'osint');
-
-                    // Update Blacklist Rules Count
-                    const blRulesEl = document.getElementById('stats-blacklist-networks');
-                    if (blRulesEl && data.blacklist !== undefined) {
-                        const val = data.blacklist;
-                        if (previousStats['blacklist'] !== val) {
-                            // animateElement('stats-blacklist-networks');
-                            previousStats['blacklist'] = val;
-                        }
-                        blRulesEl.innerText = formatRecount(val);
+                        return value.toString();
                     }
 
-                    // Special formatting for Blacklist IPs
-                    const blEl = document.getElementById('stats-blacklist-ips-display');
-                    if (blEl && data.blacklist_ips !== undefined) {
-                        const val = data.blacklist_ips;
-                        if (previousStats['blacklist_ips'] !== val) {
-                            animateElement('stats-blacklist-ips-display');
-                            previousStats['blacklist_ips'] = val;
-                        }
-                        blEl.innerText = formatRecount(val);
+                    function updateStats() {
+                        // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
+                        // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
+                        // I need to create a PUBLIC stats endpoint or modify /api/stats to be optional auth?
+                        // The prompt asks for this page "without login".
+                        // So I MUST add a public stats endpoint or use the same data passed on load and then refresh from a new public endpoint.
+                        // I will assume for now I will add a public endpoint in main.py, e.g. /api/public/stats
+
+                        fetch('/api/public/stats')
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                const updateField = (id, key) => {
+                                    const el = document.getElementById(id);
+                                    if (el) {
+                                        const newValue = data[key];
+                                        if (previousStats[key] !== null && previousStats[key] !== newValue) {
+                                            animateElement(id);
+                                        }
+                                        el.innerText = newValue; // Default for others
+                                        previousStats[key] = newValue;
+                                    }
+                                };
+
+                                updateField('stats-local', 'local');
+                                updateField('stats-osint', 'osint');
+
+                                // Update Blacklist Rules Count
+                                const blRulesEl = document.getElementById('stats-blacklist-networks');
+                                if (blRulesEl && data.blacklist !== undefined) {
+                                    const val = data.blacklist;
+                                    if (previousStats['blacklist'] !== val) {
+                                        // animateElement('stats-blacklist-networks');
+                                        previousStats['blacklist'] = val;
+                                    }
+                                    blRulesEl.innerText = formatRecount(val);
+                                }
+
+                                // Special formatting for Blacklist IPs
+                                const blEl = document.getElementById('stats-blacklist-ips-display');
+                                if (blEl && data.blacklist_ips !== undefined) {
+                                    const val = data.blacklist_ips;
+                                    if (previousStats['blacklist_ips'] !== val) {
+                                        animateElement('stats-blacklist-ips-display');
+                                        previousStats['blacklist_ips'] = val;
+                                    }
+                                    blEl.innerText = formatRecount(val);
+                                }
+                                updateField('stats-whitelist', 'whitelist');
+
+                                const apiDot = document.getElementById('api-status-dot');
+                                const apiText = document.getElementById('api-status-text');
+                                const lastCloud = document.getElementById('stats-last-cloud');
+                                const lastOsint = document.getElementById('stats-last-osint');
+
+                                if (apiDot && apiText) {
+                                    if (data.api_up) {
+                                        apiDot.style.backgroundColor = '#238636';
+                                        apiText.innerText = 'Online';
+                                        apiText.style.color = '#238636';
+                                    } else {
+                                        apiDot.style.backgroundColor = '#da3633';
+                                        apiText.innerText = 'Offline';
+                                        apiText.style.color = '#da3633';
+                                    }
+                                }
+
+                                if (lastCloud) {
+                                    const val = data.last_cloud_count || 0;
+                                    const sign = val >= 0 ? '+' : '';
+                                    lastCloud.innerText = `${sign}${val}`;
+                                }
+                                if (lastOsint) {
+                                    const val = data.last_osint_count || 0;
+                                    const sign = val >= 0 ? '+' : '';
+                                    lastOsint.innerText = `${sign}${val}`;
+                                }
+                            })
+                            .catch(error => console.error('Error fetching stats:', error));
                     }
-                    updateField('stats-whitelist', 'whitelist');
 
-                    const apiDot = document.getElementById('api-status-dot');
-                    const apiText = document.getElementById('api-status-text');
-                    const lastCloud = document.getElementById('stats-last-cloud');
-                    const lastOsint = document.getElementById('stats-last-osint');
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const initVal = (id, key) => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                const val = parseInt(el.innerText.replace(/,/g, ''));
+                                previousStats[key] = isNaN(val) ? 0 : val;
+                            }
+                        };
+                        initVal('stats-local', 'local');
+                        initVal('stats-osint', 'osint');
+                        initVal('stats-local', 'local');
+                        initVal('stats-osint', 'osint');
+                        // initVal('stats-blacklist', 'blacklist');
+                        // initVal('stats-blacklist-ips', 'blacklist_ips');
+                        const blEl = document.getElementById('stats-blacklist-ips-display');
+                        if (blEl) previousStats['blacklist_ips'] = 0;
+                        initVal('stats-whitelist', 'whitelist');
 
-                    if (apiDot && apiText) {
-                        if (data.api_up) {
-                            apiDot.style.backgroundColor = '#238636';
-                            apiText.innerText = 'Online';
-                            apiText.style.color = '#238636';
-                        } else {
-                            apiDot.style.backgroundColor = '#da3633';
-                            apiText.innerText = 'Offline';
-                            apiText.style.color = '#da3633';
-                        }
-                    }
+                        // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
+                        // Actually I should pass them in template context in main.py too.
+                        updateStats();
+                    });
 
-                    if (lastCloud) {
-                        const val = data.last_cloud_count || 0;
-                        const sign = val >= 0 ? '+' : '';
-                        lastCloud.innerText = `${sign}${val}`;
-                    }
-                    if (lastOsint) {
-                        const val = data.last_osint_count || 0;
-                        const sign = val >= 0 ? '+' : '';
-                        lastOsint.innerText = `${sign}${val}`;
-                    }
-                })
-                .catch(error => console.error('Error fetching stats:', error));
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const initVal = (id, key) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    const val = parseInt(el.innerText.replace(/,/g, ''));
-                    previousStats[key] = isNaN(val) ? 0 : val;
-                }
-            };
-            initVal('stats-local', 'local');
-            initVal('stats-osint', 'osint');
-            initVal('stats-local', 'local');
-            initVal('stats-osint', 'osint');
-            // initVal('stats-blacklist', 'blacklist');
-            // initVal('stats-blacklist-ips', 'blacklist_ips');
-            const blEl = document.getElementById('stats-blacklist-ips-display');
-            if (blEl) previousStats['blacklist_ips'] = 0;
-            initVal('stats-whitelist', 'whitelist');
-
-            // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
-            // Actually I should pass them in template context in main.py too.
-            updateStats();
-        });
-
-        setInterval(updateStats, 10000);
+                    setInterval(updateStats, 10000);
     </script>
 </body>
 
