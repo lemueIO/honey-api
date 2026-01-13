@@ -155,7 +155,8 @@
                         <div class="card-body">
                             <h5 class="card-title">Scan-Blacklist</h5>
                             <div class="d-flex justify-content-center align-items-baseline gap-2 mb-1">
-                                <span class="fs-4 fw-bold" id="stats-blacklist-networks">{{ stats.blacklist }}</span>
+                                <span class="fs-4 fw-bold" id="stats-blacklist-networks"
+                                    data-value="{{ stats.blacklist }}">{{ stats.blacklist }}</span>
                                 <small class="text-white-50">Rules</small>
                             </div>
                             <div class="d-flex justify-content-center align-items-baseline gap-2">
@@ -222,12 +223,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Stats Refresh Logic. Keep track of previous values to animate only on change.
         const previousStats = {
             local: null,
             osint: null,
             blacklist: null,
-            whitelist: null
+            blacklist_ips: null,
+            whitelist: null,
+            whitelist_ips: null
         };
 
         function animateElement(elementId) {
@@ -236,127 +238,133 @@
                 const card = element.closest('.card');
                 if (card) {
                     card.classList.remove('pulse');
-                    void card.offsetWidth; // trigger reflow
-                    // Formatter matching user request "2.6584 T" (4 decimal places)
-                    function formatRecount(value) {
-                        if (value === undefined || value === null) return '-';
-                        if (value === 0) return '0';
-
-                        // Handle ultra-large numbers > 1e42
-                        if (value >= 1e42) {
-                            return value.toExponential(4); // e.g. "2.6584e+45"
-                        }
-
-                        const tiers = [
-                            { val: 1e39, suffix: ' DD' }, // Duodecillion
-                            { val: 1e36, suffix: ' U' },  // Undecillion
-                            { val: 1e33, suffix: ' D' },  // Decillion
-                            { val: 1e30, suffix: ' Q' },  // Quetta
-                            { val: 1e27, suffix: ' R' },  // Ronna
-                            { val: 1e24, suffix: ' Y' },  // Yotta
-                            { val: 1e21, suffix: ' Z' },  // Zetta
-                            { val: 1e18, suffix: ' E' },  // Exa
-                            { val: 1e15, suffix: ' P' },  // Peta
-                            { val: 1e12, suffix: ' T' },  // Tera
-                            { val: 1e9, suffix: ' B' },   // Billion
-                            { val: 1e6, suffix: ' M' },   // Mega
-                            { val: 1e3, suffix: ' k' }    // Kilo
-                        ];
-
-                        for (const tier of tiers) {
-                            if (value >= tier.val) {
-                                const num = value / tier.val;
-                                // "2.6584" formatted
-                                return num.toFixed(4) + tier.suffix;
-                            }
-                        }
-                        return value.toString();
-                    }
-
-                    function updateStats() {
-                        // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
-                        // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
-                        // I need to create a PUBLIC stats endpoint or modify /api/stats to be optional auth?
-                        // The prompt asks for this page "without login".
-                        // So I MUST add a public stats endpoint or use the same data passed on load and then refresh from a new public endpoint.
-                        // I will assume for now I will add a public endpoint in main.py, e.g. /api/public/stats
-
-                        fetch('/api/public/stats')
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                const updateField = (id, key) => {
-                                    const el = document.getElementById(id);
-                                    if (el) {
-                                        const newValue = data[key];
-                                        if (previousStats[key] !== null && previousStats[key] !== newValue) {
-                                            animateElement(id);
-                                        }
-                                        el.innerText = newValue; // Default for others
-                                        previousStats[key] = newValue;
-                                    }
-                                    card.classList.add('pulse');
-                                }
-                            }
+                    void card.offsetWidth;
+                    card.classList.add('pulse');
+                }
+            }
         }
 
-                    // Formatter matching user request "2.6584 T" (4 decimal places)
-                    function formatRecount(value) {
-                        if (value === undefined || value === null) return '-';
-                        if (value === 0) return '0';
+        // Formatter matching user request "2.6584 T" (4 decimal places)
+        function formatRecount(value) {
+            if (value === undefined || value === null) return '-';
+            if (value === 0) return '0';
 
-                        // Handle ultra-large numbers > 1e42
-                        if (value >= 1e42) {
-                            return value.toExponential(4); // e.g. "2.6584e+45"
-                        }
+            // Handle ultra-large numbers > 1e42
+            if (value >= 1e42) {
+                return value.toExponential(4);
+            }
 
-                        const tiers = [
-                            { val: 1e39, suffix: ' DD' }, // Duodecillion
-                            { val: 1e36, suffix: ' U' },  // Undecillion
-                            { val: 1e33, suffix: ' D' },  // Decillion
-                            { val: 1e30, suffix: ' Q' },  // Quetta
-                            { val: 1e27, suffix: ' R' },  // Ronna
-                            { val: 1e24, suffix: ' Y' },  // Yotta
-                            { val: 1e21, suffix: ' Z' },  // Zetta
-                            { val: 1e18, suffix: ' E' },  // Exa
-                            { val: 1e15, suffix: ' P' },  // Peta
-                            { val: 1e12, suffix: ' T' },  // Tera
-                            { val: 1e9, suffix: ' B' },   // Billion
-                            { val: 1e6, suffix: ' M' },   // Mega
-                            { val: 1e3, suffix: ' k' }    // Kilo
-                        ];
+            const tiers = [
+                { val: 1e39, suffix: ' DD' }, // Duodecillion
+                { val: 1e36, suffix: ' U' },  // Undecillion
+                { val: 1e33, suffix: ' D' },  // Decillion
+                { val: 1e30, suffix: ' Q' },  // Quetta
+                { val: 1e27, suffix: ' R' },  // Ronna
+                { val: 1e24, suffix: ' Y' },  // Yotta
+                { val: 1e21, suffix: ' Z' },  // Zetta
+                { val: 1e18, suffix: ' E' },  // Exa
+                { val: 1e15, suffix: ' P' },  // Peta
+                { val: 1e12, suffix: ' T' },  // Tera
+                { val: 1e9, suffix: ' B' },   // Billion
+                { val: 1e6, suffix: ' M' },   // Mega
+                { val: 1e3, suffix: ' k' }    // Kilo
+            ];
 
-                        for (const tier of tiers) {
-                            if (value >= tier.val) {
-                                const num = value / tier.val;
-                                // "2.6584" formatted
-                                return num.toFixed(4) + tier.suffix;
+            for (const tier of tiers) {
+                if (value >= tier.val) {
+                    const num = value / tier.val;
+                    return num.toFixed(4) + tier.suffix;
+                }
+            }
+            return value.toLocaleString();
+        }
+
+        function updateStats() {
+            fetch('/api/public/stats')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    const updateWithFormat = (id, key) => {
+                        const el = document.getElementById(id);
+                        if (el && data[key] !== undefined) {
+                            const val = data[key];
+                            if (previousStats[key] !== val) {
+                                if (previousStats[key] !== null) animateElement(id);
+                                previousStats[key] = val;
                             }
+                            el.innerText = formatRecount(val);
                         }
-                        return value.toString();
+                    };
+
+                    updateWithFormat('stats-local', 'local');
+                    updateWithFormat('stats-osint', 'osint');
+                    updateWithFormat('stats-blacklist-networks', 'blacklist');
+                    updateWithFormat('stats-blacklist-ips-display', 'blacklist_ips');
+                    updateWithFormat('stats-whitelist-networks', 'whitelist');
+                    updateWithFormat('stats-whitelist-ips-display', 'whitelist_ips');
+
+                    // Update System Status
+                    const apiDot = document.getElementById('api-status-dot');
+                    const apiText = document.getElementById('api-status-text');
+                    const lastCloud = document.getElementById('stats-last-cloud');
+                    const lastOsint = document.getElementById('stats-last-osint');
+
+                    if (apiDot && apiText) {
+                        if (data.api_up) {
+                            apiDot.style.backgroundColor = '#238636';
+                            apiText.innerText = 'Online';
+                            apiText.style.color = '#238636';
+                        } else {
+                            apiDot.style.backgroundColor = '#da3633';
+                            apiText.innerText = 'Offline';
+                            apiText.style.color = '#da3633';
+                        }
                     }
 
-                    function updateStats() {
-                        // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
-                        // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
-                        // I need to create a PUBLIC stats endpoint or modify /api/stats to be optional auth?
-                        const wlIPs = document.getElementById('stats-whitelist-ips-display');
-                        if (wlIPs && wlIPs.hasAttribute('data-value')) {
-                            const raw = parseFloat(wlIPs.getAttribute('data-value'));
-                            previousStats['whitelist_ips'] = isNaN(raw) ? 0 : raw;
-                            wlIPs.innerText = formatRecount(raw);
-                        }
+                    if (lastCloud) {
+                        const val = data.last_cloud_count || 0;
+                        const sign = val >= 0 ? '+' : '';
+                        lastCloud.innerText = `${sign}${val}`;
+                    }
+                    if (lastOsint) {
+                        const val = data.last_osint_count || 0;
+                        const sign = val >= 0 ? '+' : '';
+                        lastOsint.innerText = `${sign}${val}`;
+                    }
+                })
+                .catch(error => console.error('Error fetching stats:', error));
+        }
 
-                        // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
-                        // Actually I should pass them in template context in main.py too.
-                        updateStats();
-                    });
+        document.addEventListener('DOMContentLoaded', () => {
+            const initVal = (id, key) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    let val = 0;
+                    if (el.hasAttribute('data-value')) {
+                        val = parseFloat(el.getAttribute('data-value'));
+                    } else {
+                        val = parseFloat(el.innerText.replace(/,/g, ''));
+                    }
+                    if (!isNaN(val)) {
+                        previousStats[key] = val;
+                        el.innerText = formatRecount(val);
+                    }
+                }
+            };
 
-                    setInterval(updateStats, 10000);
+            initVal('stats-local', 'local');
+            initVal('stats-osint', 'osint');
+            initVal('stats-blacklist-networks', 'blacklist');
+            initVal('stats-blacklist-ips-display', 'blacklist_ips');
+            initVal('stats-whitelist-networks', 'whitelist');
+            initVal('stats-whitelist-ips-display', 'whitelist_ips');
+
+            updateStats();
+        });
+
+        setInterval(updateStats, 10000);
     </script>
 </body>
 

@@ -370,11 +370,16 @@ async def calculate_and_cache_ip_stats(set_key, stats_key, label):
         total_ips = 0
         for member in members:
             try:
-                if "/" in member:
-                    total_ips += ipaddress.ip_network(member, strict=False).num_addresses
+                # Basic cleaning
+                clean_member = member.strip()
+                if not clean_member: continue
+                
+                if "/" in clean_member:
+                    total_ips += ipaddress.ip_network(clean_member, strict=False).num_addresses
                 else:
                     total_ips += 1
             except ValueError:
+                logger.warning(f"{C_RED}[STATS] Invalid IP/CIDR in {label}: {member}{C_RESET}")
                 continue
         
         REDIS_CLIENT.set(stats_key, total_ips)
@@ -738,10 +743,13 @@ async def delete_key(key: str = Form(...), user: str = Depends(get_current_user)
 @app.post("/list/add")
 async def add_to_list(ip: str = Form(...), list_type: str = Form(...), user: str = Depends(get_current_user)):
     if not user: return RedirectResponse(url="/login")
-    if list_type == "blacklist":
-        REDIS_CLIENT.sadd(KEY_BLACKLIST, ip)
-    elif list_type == "whitelist":
-        REDIS_CLIENT.sadd(KEY_WHITELIST, ip)
+    
+    clean_ip = ip.strip()
+    if clean_ip:
+        if list_type == "blacklist":
+            REDIS_CLIENT.sadd(KEY_BLACKLIST, clean_ip)
+        elif list_type == "whitelist":
+            REDIS_CLIENT.sadd(KEY_WHITELIST, clean_ip)
         
     await recalculate_all_stats()
     return RedirectResponse(url="/", status_code=303)
@@ -749,10 +757,13 @@ async def add_to_list(ip: str = Form(...), list_type: str = Form(...), user: str
 @app.post("/list/remove")
 async def remove_from_list(ip: str = Form(...), list_type: str = Form(...), user: str = Depends(get_current_user)):
     if not user: return RedirectResponse(url="/login")
-    if list_type == "blacklist":
-        REDIS_CLIENT.srem(KEY_BLACKLIST, ip)
-    elif list_type == "whitelist":
-        REDIS_CLIENT.srem(KEY_WHITELIST, ip)
+    
+    clean_ip = ip.strip()
+    if clean_ip:
+        if list_type == "blacklist":
+            REDIS_CLIENT.srem(KEY_BLACKLIST, clean_ip)
+        elif list_type == "whitelist":
+            REDIS_CLIENT.srem(KEY_WHITELIST, clean_ip)
         
     await recalculate_all_stats()
     return RedirectResponse(url="/", status_code=303)
