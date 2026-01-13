@@ -520,7 +520,7 @@
             for (const tier of tiers) {
                 if (value >= tier.val) {
                     const num = value / tier.val;
-                    return num.toPrecision(4).replace('.', ',') + tier.suffix;
+                    return num.toPrecision(4) + tier.suffix;
                 }
             }
             return value.toString();

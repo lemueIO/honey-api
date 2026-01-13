@@ -253,7 +253,7 @@
                 if (value >= tier.val) {
                     const num = value / tier.val;
                     // toPrecision(4) -> "1.234"
-                    return num.toPrecision(4).replace('.', ',') + tier.suffix;
+                    return num.toPrecision(4) + tier.suffix;
                 }
             }
             return value.toString();
