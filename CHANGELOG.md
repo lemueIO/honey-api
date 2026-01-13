@@ -1,25 +1,13 @@
-<div align="center">
-  <img src="app/static/logo_bear.png" width="120" alt="Honey Cloud Intelligence Logo">
-  <h1>Change Log</h1>
-  <p><strong>A chronicle of evolution for Honey Cloud Intelligence</strong></p>
+# Changelog
 
-  [![Version](https://img.shields.io/badge/current-v2.4.1-7B2CBF?style=for-the-badge&logo=git)](https://github.com/lemueIO/honey-api/releases)
-  [![History](https://img.shields.io/badge/history-documented-5A189A?style=for-the-badge&logo=activity&logoColor=white)](CHANGELOG.md)
-  [![Maintenance](https://img.shields.io/badge/maintained-yes-3C096C?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lemueIO/honey-api)
+All notable changes to this project will be documented in this file.
 
-  <br>
-
-  All notable changes to this project will be documented in this file.
-</div>
-
----
-
-## 🎬 [2.4.1] - 2026-01-13
+## [2.4.1] - 2026-01-13
 
 ### 🐛 Fixed
 - **UI**: 🐛 Fixed "Scan-Blacklist" display format. Now shows only the total consolidated IP count in a readable, compact format (e.g., `2.6B`) instead of scientific notation or rule count.
 
-## 🎬 [2.4.0] - 2026-01-13
+## [2.4.0] - 2026-01-13
 
 ### ✨ Added
 - **Blacklist Stats**: 📊 Enhanced "Scan-Blacklist" display to show both rule count and total blocked IPs (expanding CIDR ranges) on Dashboard and Status Page.
@@ -27,7 +15,7 @@
 ### 🛠️ Changed
 - **Versioning**: 🏷️ Minor version bump to v2.4.0.
 
-## 🎬 [2.3.1] - 2026-01-12
+## [2.3.1] - 2026-01-12
 
 ### 🐛 Fixed
 - **UI**: 🐛 Fixed missing "Global Cloud Status" link on the public status page (`/status`). Now matches the functionality of the internal dashboard.
@@ -35,8 +23,7 @@
 
 ### 🛠️ Changed
 - **Versioning**: 🏷️ Patch version bump to v2.3.1.
-
-## 🎬 [2.3.0] - 2026-01-11
+## [2.3.0] - 2026-01-11
 
 ### 🛡️ Security & Ops
 - **Hetzner Protection**: 🛡️ Implemented comprehensive Hetzner Infrastructure Whitelist in `scan-blacklist.conf` to prevent self-banning of critical server components (Management, Monitoring, DNS).
@@ -49,7 +36,7 @@
 ### 🛠️ Changed
 - **Versioning**: 🏷️ Minor version bump to v2.3.0.
 
-## 🎬 [2.2.0] - 2026-01-11
+## [2.2.0] - 2026-01-11
 
 ### ✨ Added
 - **Visuals**: 🎨 Integrated yellow ASCII logo into the logging system (startup and 12h interval).
@@ -63,46 +50,46 @@
 - **Cleanup**: 🧼 Reduced database cleanup interval to 1 hour.
 - **Versioning**: 🏷️ Minor version bump to v2.2.0.
 
-## 🎬 [2.1.0] - 2026-01-10
+## [2.1.0] - 2026-01-10
 
-### ✨ Added
+### Added
 - **Status Page**: New public status page available at `/status` (and `https://api.sec.lemue.org/status`) to view system health and threat statistics without authentication.
 - **API Endpoint**: Public statistics endpoint `/api/public/stats` to power the status page.
 
-### 🛠️ Changed
+### Changed
 - **Versioning**: Minor version bump to v2.1.0.
 
-## 🎬 [2.0.0] - 2026-01-09
+## [2.0.0] - 2026-01-09
 
-### ✨ Added
+### Added
 - **API Documentation**: Comprehensive documentation for API endpoints (`/v3/scene/ip_reputation`, `/webhook`, `/health`) added to READMEs in all supported languages (EN, DE, DE-Simple, UA).
 
-### 🛠️ Changed
+### Changed
 - **Versioning**: Major version bump to v2.0.0 to reflect the stability and feature completeness of the API.
 
-## 🎬 [1.2.2] - 2026-01-09
+## [1.2.2] - 2026-01-09
 
-### ✨ Added
+### Added
 - **Visuals**: Updated dashboard screenshot (`assets/dashboard_preview.png`) to reflect recent UI improvements and data state.
 
-### 🛠️ Changed
+### Changed
 - **Documentation**: Final polish of all documentation files, ensuring consistency and clarity across all supported languages.
 - **Versioning**: Officially bumped version to v1.2.2.
 
-## 🎬 [1.2.1] - 2026-01-09
+## [1.2.1] - 2026-01-09
 
-### ✨ Added
+### Added
 - **Visuals**: Captured fresh, high-quality dashboard screenshot (`assets/dashboard_preview.png`) with sensitive data blurred.
 
-### 🛠️ Changed
+### Changed
 - **Documentation**: 
     - Comprehensive overhaul of `README.md` with complete feature descriptions, monitoring details, and architecture overview.
     - Synchronized all translations (`DE`, `DE2`, `UA`) with the new English content.
 - **Versioning**: Officially bumped version to v1.2.1.
 
-## 🎬 [1.2.0] - 2026-01-09
+## [1.2.0] - 2026-01-09
 
-### ✨ Added
+### Added
 - **Localization**: Added full Ukrainian translation (`README_UA.md`).
 - **Monitoring**: 
     - Added "Check External" reachability link in Dashboard (Check-Host.net).
@@ -110,47 +97,47 @@
     - Added dedicated `/health` endpoint.
 - **OSINT**: Expanded OSINT feed sources to 10.
 
-### 🐛 Fixed
+### Fixed
 - **Dashboard**: Fixed "API Status" indicator using resilient socket-based checks to prevent HTTP deadlocks.
 - **UI**: Increased dashboard auto-refresh rate to 10 seconds.
 
-### 🛠️ Changed
+### Changed
 - **Versioning**: Officially bumped version to v1.2.0.
 - **Operations**: Added explicit DNS settings (`1.1.1.1`, `1.0.0.1`) to `docker-compose.yml` for improved container resolution.
 
-## 🎬 [1.0.2] - 2026-01-09
+## [1.0.2] - 2026-01-09
 
-### 🐛 Fixed
+### Fixed
 -   **API Endpoint**: Fixed double slash issue in API requests by correcting HFish database configuration (removed trailing slash from `https://api.sec.lemue.org/`).
 -   **API Route**: Updated API endpoint from `/v3/ip/reputation` to `/v3/scene/ip_reputation` to match ThreatBook v3 standard and HFish expectations.
 -   **Middleware**: Added double slash middleware as a safety mechanism to handle malformed URLs.
 
-### ✨ Added
+### Added
 -   **Enhanced Logging**: Added detailed webhook logging to differentiate between new IPs (🆕) and updates to existing IPs (🔄).
 -   **Monitoring**: Improved visibility into IP collection patterns and duplicate detection.
 
-### 🛠️ Changed
+### Changed
 -   **Deployment**: Rebuilt and redeployed production container with all fixes.
 
-## 🎬 [1.0.1] - 2026-01-09
+## [1.0.1] - 2026-01-09
 
-### ✨ Added
+### Added
 -   **WebUI Enhancements**:
     -   Added top-right navigation menu to the Login page with quick links (GitHub, Feed, Banned IPs, HFish Login).
     -   Implemented 15-second auto-refresh for both Dashboard and Login pages.
     -   Added custom favicon (`favicon-lemue.ico`) for the HFish login link.
 -   **Documentation**: Added badges and improved header in `README.md`.
 
-### 🛠️ Changed
+### Changed
 -   **UI Adjustments**:
     -   Aligned Login page icons using flexbox.
     -   Resized HFish login icon to 26px for better visual consistency.
     -   Updated HFish login link to point to `https://lemue.org/` with lowercase tooltip.
 -   **Sync Logic**: Verified and finalized the synchronization backlog processing (reduced from ~15k to ~0 backlog).
 
-## 🎬 [1.0.0] - 2026-01-09
+## [1.0.0] - 2026-01-09
 
-### ✨ Added
+### Added
 -   **Initial Release**: Complete implementation of the Honey Cloud Intelligence bridge.
 -   **CIDR Support**: Added support for CIDR notation (e.g., `192.168.1.0/24`) in Whitelist and Blacklist.
 -   **Dark Mode**: Implemented a modern dark theme for the Dashboard and Login pages.
@@ -162,11 +149,11 @@
     -   API Key management (Generation, Deletion, Listing).
     -   Secure Login page.
 
-### 🛠️ Changed
+### Changed
 -   **Branding**: Renamed project from "Threat Intelligence Bridge" to "Honey Cloud Intelligence".
 -   **Static Files**: Improved static file serving with relative paths to support reverse proxies.
 -   **Performance**: Optimized Redis queries for high-throughput IP reputation checks.
 
-### 🛡️ Security
+### Security
 -   **API Keys**: Implemented strict API key validation middleware.
 -   **Rate Limiting**: Basic structure in place for future rate limiting.
