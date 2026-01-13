@@ -506,6 +506,11 @@
             if (value === undefined || value === null) return '-';
             if (value === 0) return '0';
 
+            // Handle ultra-large numbers > Yotta (1e24)
+            if (value >= 1e27) {
+                return value.toExponential(2); // e.g. "3.40e+38"
+            }
+
             const tiers = [
                 { val: 1e24, suffix: ' Y' },
                 { val: 1e21, suffix: ' Z' },

@@ -238,21 +238,28 @@
             if (value === undefined || value === null) return '-';
             if (value === 0) return '0';
 
+            // Handle ultra-large numbers (IPv6 ranges) > Yotta (1e24)
+            // 1e27 is Ronna, but not everywhere supported. 
+            // If we are significantly larger than Yotta, fall back to pure scientific to avoid "e+12 Y" mess
+            if (value >= 1e27) {
+                return value.toExponential(2); // e.g. "3.40e+38"
+            }
+
             const tiers = [
                 { val: 1e24, suffix: ' Y' },  // Yotta
                 { val: 1e21, suffix: ' Z' },  // Zetta
                 { val: 1e18, suffix: ' E' },  // Exa
-                { val: 1e15, suffix: ' P' },
-                { val: 1e12, suffix: ' T' },  // Tera (Trillion / Billionen)
-                { val: 1e9, suffix: ' B' },   // Billion (Milliarden)
-                { val: 1e6, suffix: ' M' },   // Mega (Million)
-                { val: 1e3, suffix: ' k' }    // Kilo (Tausend)
+                { val: 1e15, suffix: ' P' },  // Peta
+                { val: 1e12, suffix: ' T' },  // Tera / Trillion
+                { val: 1e9, suffix: ' B' },   // Billion
+                { val: 1e6, suffix: ' M' },   // Mega
+                { val: 1e3, suffix: ' k' }    // Kilo
             ];
 
             for (const tier of tiers) {
                 if (value >= tier.val) {
                     const num = value / tier.val;
-                    // toPrecision(4) -> "1.234"
+                    // e.g. 2.658 + T
                     return num.toPrecision(4) + tier.suffix;
                 }
             }
