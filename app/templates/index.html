@@ -180,7 +180,8 @@
                             <small class="text-white-50">Rules</small>
                         </div>
                         <div class="d-flex justify-content-center align-items-baseline gap-2">
-                            <span class="fs-4 fw-bold" id="stats-blacklist-ips-display">{{ stats.blacklist_ips }}</span>
+                            <span class="fs-4 fw-bold" id="stats-blacklist-ips-display"
+                                data-value="{{ stats.blacklist_ips }}">-</span>
                             <small class="text-white-50">IPs</small>
                         </div>
                     </div>
@@ -508,7 +509,7 @@
 
             // Handle ultra-large numbers
             if (value >= 1e33) {
-                return value.toExponential(2);
+                return value.toExponential(4); // e.g. "2.6584e+36"
             }
 
             const tiers = [
@@ -627,24 +628,44 @@
                 .catch(error => console.error('Error fetching stats:', error));
         }
 
-        // Initialize previousStats from DOM to ensure first real update triggers animation
+        // Initialize previousStats from DOM/Data Attributes to ensure first real update triggers animation
         document.addEventListener('DOMContentLoaded', () => {
             const initVal = (id, key) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    // remove commas if present and parse
-                    const val = parseInt(el.innerText.replace(/,/g, ''));
+                    // Check for data-value first (for raw numbers passed from Jinja)
+                    let val = 0;
+                    if (el.hasAttribute('data-value')) {
+                        const raw = el.getAttribute('data-value');
+                        // Use parseFloat because data-value might be a massive int string
+                        val = parseFloat(raw);
+                        if (!isNaN(val)) {
+                            // Immediately format it on load!
+                            if (id === 'stats-blacklist-ips-display' || id === 'stats-blacklist-networks') {
+                                el.innerText = formatRecount(val);
+                            } else {
+                                el.innerText = val;
+                            }
+                        }
+                    } else {
+                        // Fallback to parsing comma text
+                        val = parseInt(el.innerText.replace(/,/g, ''));
+                    }
                     previousStats[key] = isNaN(val) ? 0 : val;
                 }
             };
             initVal('stats-local', 'local');
             initVal('stats-osint', 'osint');
-            // initVal('stats-blacklist', 'blacklist');
-            // initVal('stats-blacklist-ips', 'blacklist_ips');
             // Manual init for display
             const blEl = document.getElementById('stats-blacklist-ips-display');
-            if (blEl) previousStats['blacklist_ips'] = 0; // Force update on first load
-            initVal('stats-whitelist', 'whitelist');
+            // If data-value is present, initVal handled the render.
+            if (blEl && blEl.hasAttribute('data-value')) {
+                const raw = parseFloat(blEl.getAttribute('data-value'));
+                previousStats['blacklist_ips'] = isNaN(raw) ? 0 : raw;
+                blEl.innerText = formatRecount(raw); // Force immediate render
+            } else {
+                if (blEl) previousStats['blacklist_ips'] = 0;
+            }
             initVal('stats-whitelist', 'whitelist');
         });
 

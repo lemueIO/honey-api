@@ -235,7 +235,7 @@
 
                         // Handle ultra-large numbers
                         if (value >= 1e33) {
-                            return value.toExponential(2);
+                            return value.toExponential(4);
                         }
 
                         const tiers = [
