@@ -30,6 +30,7 @@ services:
       - "3001:3001"
     environment:
       - TZ=Europe/Amsterdam
+      - UPTIME_KUMA_BASE_PATH=/cloud
     networks:
       - default
       - nginx-pm_default

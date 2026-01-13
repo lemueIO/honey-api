@@ -46,26 +46,7 @@ async def fix_double_slashes(request: Request, call_next):
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# --- Bridge Redirects for Uptime Kuma (Subpath Support) ---
-@app.get("/icon.svg")
-async def get_icon_bridge():
-    return RedirectResponse(url="/cloud/icon.svg")
-
-@app.get("/api/status-page/{path:path}")
-async def status_page_bridge(path: str):
-    return RedirectResponse(url=f"/cloud/api/status-page/{path}")
-
-@app.get("/upload/{path:path}")
-async def upload_bridge(path: str):
-    return RedirectResponse(url=f"/cloud/upload/{path}")
-
-@app.get("/status/{path:path}")
-async def status_kuma_bridge(path: str):
-    """
-    Bridge for Uptime Kuma status pages (e.g. /status/sec).
-    Redirects to the subpath-aware version.
-    """
-    return RedirectResponse(url=f"/cloud/status/{path}")
+# --- Bridge Redirects for Uptime Kuma (Subpath Support) moved below main status routes ---
 
 
 # --- Logging Colors ---
