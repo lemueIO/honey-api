@@ -287,25 +287,32 @@ async def periodic_logo_display():
         log_logo()
 
 async def load_blacklist_from_file():
-    """Reads scan-blacklist.conf and populates REDIS_CLIENT's blacklist."""
-    conf_path = "scan-blacklist.conf"
-    if os.path.exists(conf_path):
-        try:
-            with open(conf_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#"):
-                        # Strip inline comments
-                        if "#" in line:
-                            line = line.split("#")[0]
+    """Reads scan-blacklist.conf and scan-blacklist-custom.conf to populate REDIS_CLIENT's blacklist."""
+    conf_files = ["scan-blacklist.conf", "scan-blacklist-custom.conf"]
+    
+    for conf_path in conf_files:
+        if os.path.exists(conf_path):
+            try:
+                count = 0
+                with open(conf_path, "r") as f:
+                    for line in f:
                         line = line.strip()
-                        if line:
-                            REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
-            logger.info(f"{C_GREEN}[BLACKLIST] Loaded from {conf_path}{C_RESET}")
-        except Exception as e:
-            logger.error(f"{C_RED}[BLACKLIST] Error loading {conf_path}: {e}{C_RESET}")
-    else:
-        logger.warning(f"{C_YELLOW}[BLACKLIST] {conf_path} not found.{C_RESET}")
+                        if line and not line.startswith("#"):
+                            # Strip inline comments
+                            if "#" in line:
+                                line = line.split("#")[0]
+                            line = line.strip()
+                            if line:
+                                REDIS_CLIENT.sadd(KEY_BLACKLIST, line)
+                                count += 1
+                logger.info(f"{C_GREEN}[BLACKLIST] Loaded {count} IPs from {conf_path}{C_RESET}")
+            except Exception as e:
+                logger.error(f"{C_RED}[BLACKLIST] Error loading {conf_path}: {e}{C_RESET}")
+        else:
+            if conf_path == "scan-blacklist.conf":
+                logger.warning(f"{C_YELLOW}[BLACKLIST] {conf_path} not found.{C_RESET}")
+            else:
+                logger.info(f"{C_BLUE}[BLACKLIST] {conf_path} not found (optional).{C_RESET}")
 
 def purge_test_ip():
     """Specifically removes the test IP 1.2.3.4 from the database."""
