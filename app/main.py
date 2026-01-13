@@ -432,6 +432,7 @@ async def periodic_db_cleanup():
                             REDIS_CLIENT.delete(key)
                             REDIS_CLIENT.decr(KEY_STATS_LOCAL)
                             removed_local += 1
+                        await asyncio.sleep(0) # Let other tasks run
                     if str(cursor) == '0':
                         break
                 
@@ -447,6 +448,7 @@ async def periodic_db_cleanup():
                             REDIS_CLIENT.delete(key)
                             REDIS_CLIENT.decr(KEY_STATS_OSINT)
                             removed_osint += 1
+                        await asyncio.sleep(0) # Let other tasks run
                     if str(cursor) == '0':
                         break
 
