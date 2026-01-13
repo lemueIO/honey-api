@@ -159,7 +159,8 @@
                                 <small class="text-white-50">Rules</small>
                             </div>
                             <div class="d-flex justify-content-center align-items-baseline gap-2">
-                                <span class="fs-4 fw-bold" id="stats-blacklist-ips-display">-</span>
+                                <span class="fs-4 fw-bold" id="stats-blacklist-ips-display"
+                                    data-value="{{ stats.blacklist_ips }}">-</span>
                                 <small class="text-white-50">IPs</small>
                             </div>
                         </div>
@@ -169,7 +170,8 @@
                     <div class="card stat-card bg-whitelist h-100">
                         <div class="card-body">
                             <h5 class="card-title">Whitelist</h5>
-                            <p class="display-6 fw-bold mb-0" id="stats-whitelist">{{ stats.whitelist }}</p>
+                            <p class="display-6 fw-bold mb-0" id="stats-whitelist" data-value="{{ stats.whitelist }}">-
+                            </p>
                             <small>Permanent</small>
                         </div>
                     </div>
@@ -331,24 +333,53 @@
                             .catch (error => console.error('Error fetching stats:', error));
                 }
 
+                // Initialize previousStats from DOM/Data Attributes
                 document.addEventListener('DOMContentLoaded', () => {
                     const initVal = (id, key) => {
                         const el = document.getElementById(id);
                         if (el) {
-                            const val = parseInt(el.innerText.replace(/,/g, ''));
+                            let val = 0;
+                            if (el.hasAttribute('data-value')) {
+                                const raw = el.getAttribute('data-value');
+                                val = parseFloat(raw);
+                                if (!isNaN(val)) {
+                                    // Immediately format specific fields
+                                    if (id === 'stats-blacklist-ips-display' || id === 'stats-whitelist') {
+                                        el.innerText = formatRecount(val);
+                                    } else {
+                                        el.innerText = val;
+                                    }
+                                }
+                            } else {
+                                val = parseInt(el.innerText.replace(/,/g, ''));
+                            }
                             previousStats[key] = isNaN(val) ? 0 : val;
                         }
                     };
-                    initVal('stats-local', 'local');
-                    initVal('stats-osint', 'osint');
-                    initVal('stats-local', 'local');
-                    initVal('stats-osint', 'osint');
-                    // initVal('stats-blacklist', 'blacklist');
-                    // initVal('stats-blacklist-ips', 'blacklist_ips');
-                    const blEl = document.getElementById('stats-blacklist-ips-display');
-                    if (blEl) previousStats['blacklist_ips'] = 0;
-                    initVal('stats-whitelist', 'whitelist');
 
+                    // Initialize fields
+                    initVal('stats-local', 'local');
+                    initVal('stats-osint', 'osint');
+
+                    // Lists
+                    const blEl = document.getElementById('stats-blacklist-ips-display');
+                    if (blEl && blEl.hasAttribute('data-value')) {
+                        const raw = parseFloat(blEl.getAttribute('data-value'));
+                        previousStats['blacklist_ips'] = isNaN(raw) ? 0 : raw;
+                        blEl.innerText = formatRecount(raw);
+                    } else {
+                        if (blEl) previousStats['blacklist_ips'] = 0;
+                    }
+
+                    // Whitelist
+                    const wlEl = document.getElementById('stats-whitelist');
+                    if (wlEl && wlEl.hasAttribute('data-value')) {
+                        const raw = parseFloat(wlEl.getAttribute('data-value'));
+                        previousStats['whitelist'] = isNaN(raw) ? 0 : raw;
+                        wlEl.innerText = formatRecount(raw);
+                    } else {
+                        initVal('stats-whitelist', 'whitelist');
+                    }
                     // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
                     // Actually I should pass them in template context in main.py too.
                     updateStats();
