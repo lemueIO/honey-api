@@ -191,7 +191,7 @@
                 <div class="card stat-card bg-whitelist h-100">
                     <div class="card-body">
                         <h5 class="card-title">Whitelist</h5>
-                        <p class="display-6 fw-bold mb-0" id="stats-whitelist">{{ stats.whitelist }}</p>
+                        <p class="display-6 fw-bold mb-0" id="stats-whitelist" data-value="{{ stats.whitelist }}">-</p>
                         <small>Permanent</small>
                     </div>
                 </div>
@@ -586,8 +586,19 @@
                         }
                         blEl.innerText = formatRecount(val);
                     }
-                    updateField('stats-whitelist', 'whitelist');
-                    updateField('stats-whitelist', 'whitelist');
+
+                    // Update Whitelist with Formatting
+                    const wlEl = document.getElementById('stats-whitelist');
+                    if (wlEl && data.whitelist !== undefined) {
+                        const val = data.whitelist;
+                        if (previousStats['whitelist'] !== val) {
+                            animateElement('stats-whitelist');
+                            previousStats['whitelist'] = val;
+                        }
+                        wlEl.innerText = formatRecount(val);
+                    }
+
+                    // updateField('stats-whitelist', 'whitelist'); // Removed simple update
 
                     // Update List Badges
                     const badgeBlacklist = document.getElementById('badge-blacklist');
@@ -641,7 +652,7 @@
                         val = parseFloat(raw);
                         if (!isNaN(val)) {
                             // Immediately format it on load!
-                            if (id === 'stats-blacklist-ips-display' || id === 'stats-blacklist-networks') {
+                            if (id === 'stats-blacklist-ips-display' || id === 'stats-blacklist-networks' || id === 'stats-whitelist') {
                                 el.innerText = formatRecount(val);
                             } else {
                                 el.innerText = val;

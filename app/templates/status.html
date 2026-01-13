@@ -307,69 +307,54 @@
                                 const blEl = document.getElementById('stats-blacklist-ips-display');
                                 if (blEl && data.blacklist_ips !== undefined) {
                                     const val = data.blacklist_ips;
-                                    if (previousStats['blacklist_ips'] !== val) {
-                                        animateElement('stats-blacklist-ips-display');
-                                        previousStats['blacklist_ips'] = val;
-                                    }
-                                    blEl.innerText = formatRecount(val);
+                                    apiDot.style.backgroundColor = '#238636';
+                                    apiText.innerText = 'Online';
+                                    apiText.style.color = '#238636';
+                                } else {
+                                    apiDot.style.backgroundColor = '#da3633';
+                                    apiText.innerText = 'Offline';
+                                    apiText.style.color = '#da3633';
                                 }
-                                updateField('stats-whitelist', 'whitelist');
-
-                                const apiDot = document.getElementById('api-status-dot');
-                                const apiText = document.getElementById('api-status-text');
-                                const lastCloud = document.getElementById('stats-last-cloud');
-                                const lastOsint = document.getElementById('stats-last-osint');
-
-                                if (apiDot && apiText) {
-                                    if (data.api_up) {
-                                        apiDot.style.backgroundColor = '#238636';
-                                        apiText.innerText = 'Online';
-                                        apiText.style.color = '#238636';
-                                    } else {
-                                        apiDot.style.backgroundColor = '#da3633';
-                                        apiText.innerText = 'Offline';
-                                        apiText.style.color = '#da3633';
-                                    }
-                                }
+                            }
 
                                 if (lastCloud) {
-                                    const val = data.last_cloud_count || 0;
-                                    const sign = val >= 0 ? '+' : '';
-                                    lastCloud.innerText = `${sign}${val}`;
-                                }
-                                if (lastOsint) {
-                                    const val = data.last_osint_count || 0;
-                                    const sign = val >= 0 ? '+' : '';
-                                    lastOsint.innerText = `${sign}${val}`;
-                                }
-                            })
-                            .catch(error => console.error('Error fetching stats:', error));
-                    }
+                            const val = data.last_cloud_count || 0;
+                            const sign = val >= 0 ? '+' : '';
+                            lastCloud.innerText = `${sign}${val}`;
+                        }
+                        if (lastOsint) {
+                            const val = data.last_osint_count || 0;
+                            const sign = val >= 0 ? '+' : '';
+                            lastOsint.innerText = `${sign}${val}`;
+                        }
+                    })
+                            .catch (error => console.error('Error fetching stats:', error));
+                }
 
-                    document.addEventListener('DOMContentLoaded', () => {
-                        const initVal = (id, key) => {
-                            const el = document.getElementById(id);
-                            if (el) {
-                                const val = parseInt(el.innerText.replace(/,/g, ''));
-                                previousStats[key] = isNaN(val) ? 0 : val;
-                            }
-                        };
-                        initVal('stats-local', 'local');
-                        initVal('stats-osint', 'osint');
-                        initVal('stats-local', 'local');
-                        initVal('stats-osint', 'osint');
-                        // initVal('stats-blacklist', 'blacklist');
-                        // initVal('stats-blacklist-ips', 'blacklist_ips');
-                        const blEl = document.getElementById('stats-blacklist-ips-display');
-                        if (blEl) previousStats['blacklist_ips'] = 0;
-                        initVal('stats-whitelist', 'whitelist');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const initVal = (id, key) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            const val = parseInt(el.innerText.replace(/,/g, ''));
+                            previousStats[key] = isNaN(val) ? 0 : val;
+                        }
+                    };
+                    initVal('stats-local', 'local');
+                    initVal('stats-osint', 'osint');
+                    initVal('stats-local', 'local');
+                    initVal('stats-osint', 'osint');
+                    // initVal('stats-blacklist', 'blacklist');
+                    // initVal('stats-blacklist-ips', 'blacklist_ips');
+                    const blEl = document.getElementById('stats-blacklist-ips-display');
+                    if (blEl) previousStats['blacklist_ips'] = 0;
+                    initVal('stats-whitelist', 'whitelist');
 
-                        // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
-                        // Actually I should pass them in template context in main.py too.
-                        updateStats();
-                    });
+                    // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them
+                    // Actually I should pass them in template context in main.py too.
+                    updateStats();
+                });
 
-                    setInterval(updateStats, 10000);
+                setInterval(updateStats, 10000);
     </script>
 </body>
 
