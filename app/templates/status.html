@@ -154,12 +154,8 @@
                     <div class="card stat-card bg-blacklist h-100">
                         <div class="card-body">
                             <h5 class="card-title">Scan-Blacklist</h5>
-                            <p class="display-6 fw-bold mb-0">
-                                <span id="stats-blacklist">{{ stats.blacklist }}</span> <span
-                                    class="fs-6 text-muted">/</span> <span id="stats-blacklist-ips" class="fs-4">{{
-                                    stats.blacklist_ips }}</span>
-                            </p>
-                            <small>Rules / Total IPs</small>
+                            <p class="display-6 fw-bold mb-0" id="stats-blacklist-ips-display">-</p>
+                            <small>Silently Discarded IPs</small>
                         </div>
                     </div>
                 </div>
@@ -261,8 +257,21 @@
 
                     updateField('stats-local', 'local');
                     updateField('stats-osint', 'osint');
-                    updateField('stats-blacklist', 'blacklist');
-                    updateField('stats-blacklist-ips', 'blacklist_ips');
+                    updateField('stats-local', 'local');
+                    updateField('stats-osint', 'osint');
+                    // updateField('stats-blacklist', 'blacklist');
+                    // updateField('stats-blacklist-ips', 'blacklist_ips');
+
+                    // Special formatting for Blacklist IPs
+                    const blEl = document.getElementById('stats-blacklist-ips-display');
+                    if (blEl && data.blacklist_ips !== undefined) {
+                        const val = data.blacklist_ips;
+                        if (previousStats['blacklist_ips'] !== val) {
+                            animateElement('stats-blacklist-ips-display');
+                            previousStats['blacklist_ips'] = val;
+                        }
+                        blEl.innerText = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
+                    }
                     updateField('stats-whitelist', 'whitelist');
 
                     const apiDot = document.getElementById('api-status-dot');
@@ -306,8 +315,12 @@
             };
             initVal('stats-local', 'local');
             initVal('stats-osint', 'osint');
-            initVal('stats-blacklist', 'blacklist');
-            initVal('stats-blacklist-ips', 'blacklist_ips');
+            initVal('stats-local', 'local');
+            initVal('stats-osint', 'osint');
+            // initVal('stats-blacklist', 'blacklist');
+            // initVal('stats-blacklist-ips', 'blacklist_ips');
+            const blEl = document.getElementById('stats-blacklist-ips-display');
+            if (blEl) previousStats['blacklist_ips'] = 0;
             initVal('stats-whitelist', 'whitelist');
 
             // Initial fetch to get status/last counts which might not be in template context initially if I don't pass them

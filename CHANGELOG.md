@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.1] - 2026-01-13
+
+### 🐛 Fixed
+- **UI**: 🐛 Fixed "Scan-Blacklist" display format. Now shows only the total consolidated IP count in a readable, compact format (e.g., `2.6B`) instead of scientific notation or rule count.
+
 ## [2.4.0] - 2026-01-13
 
 ### ✨ Added
