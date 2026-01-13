@@ -1,7 +1,7 @@
 <div align="center">
   <img src="app/static/logo_bear.png" width="150" alt="Honey Cloud Intelligence Logo">
   <h1>Honey Cloud Intelligence</h1>
-  <p><strong>High-Performance Threat Intelligence Bridge & Aggregator</strong></p>
+  <p><strong>The Operational Brain of the Honey-Ecosystem</strong></p>
 
   [![Version](https://img.shields.io/badge/version-v2.4.1-7B2CBF?style=for-the-badge&logo=git)](https://github.com/lemueIO/honey-api/releases/tag/v2.4.1)
   [![Python](https://img.shields.io/badge/python-3.9%2B-5A189A?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -24,7 +24,7 @@
 ---
 
 > [!NOTE]
-> *Honey Cloud Intelligence is a high-performance Threat Intelligence Bridge designed to aggregate, manage, and serve threat data from local HFish honeypots and global OSINT sources. It emulates the ThreatBook v3 API, allowing for seamless integration into existing security tools without hitting external rate limits.*
+> *Honey Cloud Intelligence (honey-api) is the centralized backend of the **Honey-Ecosystem**. It aggregates real-time attack data from distributed sensors (`honey-scan`), fuses it with global OSINT feeds, and exposes a high-performance Threat Intelligence API.*
 
 <div align="center">
   <br>
@@ -39,25 +39,95 @@
 
 ---
 
+## 🏗️ System Architecture
+
+The **Honey-Ecosystem** consists of two primary components:
+1.  **`honey-scan` (The Sensor)**: Runs on edge nodes (honeypots), detects attacks, and pushes raw logs to the API.
+2.  **`honey-api` (The Brain)**: This repository. It receives data, manages whitelists/blacklists, and serves reputation queries.
+
+```mermaid
+graph LR
+    subgraph Edge Nodes
+        A[honey-scan / HFish] -- POST /webhook --> B
+        A2[honey-scan / HFish] -- POST /webhook --> B
+    end
+
+    subgraph Core Cloud
+        B(Honey-API)
+        B -- Store --> C[(Redis Memory)]
+        D[OSINT Feeds] -- Fetch Loop --> B
+    end
+
+    subgraph Security Tools
+        E[Firewalls / SOAR] -- GET /v3/reputation --> B
+    end
+    
+    style B fill:#7B2CBF,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#DC382D,stroke:#333,stroke-width:2px,color:#fff
+```
+
 ## 🚀 Features
 
 | Feature category | Description |
 | :--- | :--- |
-| **Threat Data Aggregation** | Combines real-time data from local **honeypots** (via HFish) with **10+ external OSINT feeds**. |
+| **Central Aggregation** | Acts as the **hub** for all `honey-scan` nodes, creating a unified intelligence database. |
 | **High Performance** | Powered by **FastAPI** and **Redis** for sub-millisecond response times. |
-| **API Emulation** | Fully compatible with the **ThreatBook v3 API** standard. |
-| **Intelligent Filtering** | Supports **exact IP matches** and **CIDR ranges** (e.g., `10.0.0.0/24`). Optimized database pruning via pre-fetched blacklist scanning. |
-| **Advanced Logging** | Structural logging with color-coded ANSI tags (`[SYSTEM]`, `[CLEAN:DB]`) and visual feedback. |
-| **Robust Monitoring** | Resilient **socket-level reachability verification**, external Check-Host.net links, and a dedicated `/health` endpoint. |
-| **Modern UI** | Sleek **dark-mode dashboard** with real-time statistics, API key management, and list control. |
-| **Status Page** | A simplified, **public status dashboard** available without login. |
-| **International** | Full documentation in **English**, **German** (Standard & Simple), and **Ukrainian**. |
+| **API Emulation** | Fully compatible with the **ThreatBook v3 API** standard for easy integration. |
+| **Intelligent Filtering** | Supports **exact IP matches** and **CIDR ranges**. Automatically purges old entries. |
+| **Advanced Logging** | Structural logging with color-coded ANSI tags (`[SYSTEM]`, `[CLEAN:DB]`) for ops visibility. |
+| **Robust Monitoring** | Resilient **socket-level checks** and `/health` endpoints for orchestration. |
 
-## 🔑 Access & API Keys
+## 📡 API & Data Contracts
 
-> [!IMPORTANT]
-> **API Keys are not public.**
-> Access to the Honey Cloud Intelligence API is strictly controlled. API keys are only granted after direct contact with the administrator. Please contact the project maintainer to request an API key.
+### 1. Ingestion Interface (Sensor -> API)
+The bridge accepts data from `honey-scan` or HFish nodes via a webhook.
+
+*   **Endpoint**: `POST /webhook`
+*   **Auth**: IP-based whitelist (optional configuration via upstream proxy recommended)
+*   **ContentType**: `application/json`
+
+**Expected Payload:**
+```json
+{
+  "attack_ip": "1.2.3.4"
+}
+```
+
+### 2. Reputation Interface (Tools -> API)
+Security tools query this endpoint to check if an IP is malicious. It formats data to match the ThreatBook v3 standard.
+
+*   **Endpoint**: `GET /v3/scene/ip_reputation`
+*   **Auth**: Required (`apikey` query parameter)
+
+**Request:**
+`GET /v3/scene/ip_reputation?apikey=YOUR_KEY&resource=192.168.1.5`
+
+**Response:**
+```json
+{
+    "code": 0,
+    "data": {
+        "192.168.1.5": {
+            "severity": "high",
+            "judgments": ["hfish honeypot"],
+            "update_time": "2026-01-13 09:00:00"
+        }
+    },
+    "message": "success"
+}
+```
+
+## 🔗 Integration Setup
+
+To connect a **`honey-scan`** node (or any HFish instance) to this API:
+
+1.  **Deploy Honey-API**: Ensure this container is running and accessible (e.g., `http://10.0.0.5:8080`).
+2.  **Configure Sensor**: In your `honey-scan` or HFish configuration, set the **Webhook URL**:
+    ```bash
+    # Example HFish / honey-scan configuration
+    WEBHOOK_URL="http://10.0.0.5:8080/api/v1/webhook"
+    ```
+    *(Note: Ensure network connectivity between the sensor and the API container/host).*
 
 ## 📦 Installation
 
@@ -80,63 +150,6 @@
     -   Default Admin Password: `admin` (Change immediately in `docker-compose.yml`!)
 
 </details>
-
-## 💻 Usage
-
-### 🔄 Synchronizing Data
-The bridge accepts data from HFish nodes via a webhook endpoint. Ensure your HFish nodes are configured to send data to:
-`http://<your-server-ip>:8080/api/v1/webhook`
-
-### 🕵️ Querying Reputation
-Query the API emulating the ThreatBook format:
-```bash
-curl "http://localhost:8080/v3/scene/ip_reputation?apikey=YOUR_API_KEY&resource=1.2.3.4"
-```
-
-## 📖 API Documentation
-
-### 🧠 1. Reputation Check (ThreatBook v3 Compatible)
-Query IP reputation intelligence.
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/v3/scene/ip_reputation` | Checks the reputation of a specific IP resource. |
-
-**Parameters:**
-- `apikey`: Your personal API key.
-- `resource`: The IP address to check.
-
-<details>
-<summary><strong>View Response Example</strong></summary>
-
-```json
-{
-    "code": 0,
-    "data": {
-        "1.2.3.4": {
-            "severity": "high",
-            "judgments": ["permanent blacklist"],
-            "update_time": "2024-01-01 12:00:00"
-        }
-    },
-    "message": "success"
-}
-```
-</details>
-
-### 🎣 2. Webhook (HFish Compatible)
-Receive attack logs from HFish nodes.
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/webhook` | Ingests attack logs from HFish instances. |
-
-### 💓 3. Health Check
-Monitor system status.
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/health` | Returns system operational status. |
 
 ## 🛠️ Technology Stack
 
