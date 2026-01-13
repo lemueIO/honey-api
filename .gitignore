@@ -6,4 +6,5 @@ __pycache__/
 .idea/
 .DS_Store
 .gitaccounts
-scan-blacklist.conf
+scan-blacklist-custom.conf
+
