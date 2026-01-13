@@ -10,6 +10,13 @@
 
   <br>
 
+  [![Stars](https://img.shields.io/github/stars/lemueIO/honey-api?style=for-the-badge&color=7B2CBF&labelColor=240046)](https://github.com/lemueIO/honey-api/stargazers)
+  [![Forks](https://img.shields.io/github/forks/lemueIO/honey-api?style=for-the-badge&color=5A189A&labelColor=240046)](https://github.com/lemueIO/honey-api/network/members)
+  [![Watchers](https://img.shields.io/github/watchers/lemueIO/honey-api?style=for-the-badge&color=3C096C&labelColor=240046)](https://github.com/lemueIO/honey-api/watchers)
+  [![Contributors](https://img.shields.io/github/contributors/lemueIO/honey-api?style=for-the-badge&color=240046&labelColor=10002b)](https://github.com/lemueIO/honey-api/graphs/contributors)
+
+  <br>
+
   [![Repo Size](https://img.shields.io/github/repo-size/lemueIO/honey-api?style=for-the-badge&color=240046&labelColor=10002b)](https://github.com/lemueIO/honey-api)
   [![License](https://img.shields.io/github/license/lemueIO/honey-api?style=for-the-badge&color=240046&labelColor=10002b)](LICENSE)
   [![Last Commit](https://img.shields.io/github/last-commit/lemueIO/honey-api?style=for-the-badge&color=240046&labelColor=10002b)](https://github.com/lemueIO/honey-api/commits/main)
