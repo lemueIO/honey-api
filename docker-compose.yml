@@ -9,6 +9,7 @@ services:
       - 1.0.0.1
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - TZ=Europe/Amsterdam
     depends_on:
       - redis
     volumes:
@@ -27,6 +28,8 @@ services:
       - uptime-kuma-data:/app/data
     ports:
       - "3001:3001"
+    environment:
+      - TZ=Europe/Amsterdam
     networks:
       - default
       - nginx-pm_default
