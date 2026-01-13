@@ -233,6 +233,32 @@
             }
         }
 
+        // Formatter for "5 stellige Darstellung" (4 significant digits + dot)
+        function formatRecount(value) {
+            if (value === undefined || value === null) return '-';
+            if (value === 0) return '0';
+
+            const tiers = [
+                { val: 1e24, suffix: ' Y' },  // Yotta
+                { val: 1e21, suffix: ' Z' },  // Zetta
+                { val: 1e18, suffix: ' E' },  // Exa
+                { val: 1e15, suffix: ' P' },  // Peta
+                { val: 1e12, suffix: ' T' },  // Tera (Trillion / Billionen)
+                { val: 1e9, suffix: ' G' },   // Giga (Billion / Milliarden)
+                { val: 1e6, suffix: ' M' },   // Mega (Million)
+                { val: 1e3, suffix: ' k' }    // Kilo (Tausend)
+            ];
+
+            for (const tier of tiers) {
+                if (value >= tier.val) {
+                    const num = value / tier.val;
+                    // toPrecision(4) -> "1.234"
+                    return num.toPrecision(4).replace('.', ',') + tier.suffix;
+                }
+            }
+            return value.toString();
+        }
+
         function updateStats() {
             // Use special stats endpoint if needed or just reuse /api/stats but we need to handle auth if /api/stats requires it.
             // Wait, /api/stats IS protected in main.py: async def get_stats(user: str = Depends(get_current_user))
@@ -256,13 +282,11 @@
                             if (previousStats[key] !== null && previousStats[key] !== newValue) {
                                 animateElement(id);
                             }
-                            el.innerText = newValue;
+                            el.innerText = newValue; // Default for others
                             previousStats[key] = newValue;
                         }
                     };
 
-                    updateField('stats-local', 'local');
-                    updateField('stats-osint', 'osint');
                     updateField('stats-local', 'local');
                     updateField('stats-osint', 'osint');
 
@@ -271,10 +295,10 @@
                     if (blRulesEl && data.blacklist !== undefined) {
                         const val = data.blacklist;
                         if (previousStats['blacklist'] !== val) {
-                            // animateElement('stats-blacklist-networks'); // Optional animation
+                            // animateElement('stats-blacklist-networks');
                             previousStats['blacklist'] = val;
                         }
-                        blRulesEl.innerText = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
+                        blRulesEl.innerText = formatRecount(val);
                     }
 
                     // Special formatting for Blacklist IPs
@@ -285,20 +309,7 @@
                             animateElement('stats-blacklist-ips-display');
                             previousStats['blacklist_ips'] = val;
                         }
-
-                        // Custom Formatter for massive numbers (avoiding Intl wrapping issues)
-                        let formatted;
-                        if (val > 1e12) {
-                            // Billions, Trillions, Quadrillions+
-                            if (val > 1e24) formatted = (val / 1e24).toFixed(1) + 'Y'; // Yotta (Septillion in US) ? No, Yotta is 10^24
-                            else if (val > 1e21) formatted = (val / 1e21).toFixed(1) + 'Z'; // Zetta
-                            else if (val > 1e18) formatted = (val / 1e18).toFixed(1) + 'E'; // Exa
-                            else if (val > 1e15) formatted = (val / 1e15).toFixed(1) + 'P'; // Peta
-                            else formatted = (val / 1e12).toFixed(1) + 'T'; // Tera / Trillion
-                        } else {
-                            formatted = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
-                        }
-                        blEl.innerText = formatted;
+                        blEl.innerText = formatRecount(val);
                     }
                     updateField('stats-whitelist', 'whitelist');
 

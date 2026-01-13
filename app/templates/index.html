@@ -501,6 +501,31 @@
             }
         }
 
+        // Formatter for "5 stellige Darstellung" (4 significant digits + dot)
+        function formatRecount(value) {
+            if (value === undefined || value === null) return '-';
+            if (value === 0) return '0';
+
+            const tiers = [
+                { val: 1e24, suffix: ' Y' },
+                { val: 1e21, suffix: ' Z' },
+                { val: 1e18, suffix: ' E' },
+                { val: 1e15, suffix: ' P' },
+                { val: 1e12, suffix: ' T' },
+                { val: 1e9, suffix: ' G' },
+                { val: 1e6, suffix: ' M' },
+                { val: 1e3, suffix: ' k' }
+            ];
+
+            for (const tier of tiers) {
+                if (value >= tier.val) {
+                    const num = value / tier.val;
+                    return num.toPrecision(4).replace('.', ',') + tier.suffix;
+                }
+            }
+            return value.toString();
+        }
+
         function updateStats() {
             fetch('/api/stats')
                 .then(response => {
@@ -539,7 +564,7 @@
                         if (previousStats['blacklist'] !== val) {
                             previousStats['blacklist'] = val;
                         }
-                        blRulesEl.innerText = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
+                        blRulesEl.innerText = formatRecount(val);
                     }
 
                     // Special formatting for Blacklist IPs
@@ -550,19 +575,7 @@
                             animateElement('stats-blacklist-ips-display');
                             previousStats['blacklist_ips'] = val;
                         }
-
-                        // Custom Formatter for massive numbers
-                        let formatted;
-                        if (val > 1e12) {
-                            if (val > 1e24) formatted = (val / 1e24).toFixed(1) + 'Y';
-                            else if (val > 1e21) formatted = (val / 1e21).toFixed(1) + 'Z';
-                            else if (val > 1e18) formatted = (val / 1e18).toFixed(1) + 'E';
-                            else if (val > 1e15) formatted = (val / 1e15).toFixed(1) + 'P';
-                            else formatted = (val / 1e12).toFixed(1) + 'T';
-                        } else {
-                            formatted = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(val);
-                        }
-                        blEl.innerText = formatted;
+                        blEl.innerText = formatRecount(val);
                     }
                     updateField('stats-whitelist', 'whitelist');
                     updateField('stats-whitelist', 'whitelist');
